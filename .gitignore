@@ -1,0 +1,28 @@
+# Pebble / waf build output
+build/
+*.pbw
+.lock-waf_*
+.waf-*
+__pycache__/
+*.pyc
+*.pyo
+
+# Node (enableMultiJS pulls webpack)
+node_modules/
+npm-debug.log*
+
+# Pebble SDK / tooling caches
+.pebble-tools/
+.pebble-sdk-cache/
+
+# Host-build artefacts
+tests/unit/build/
+
+# Editor / OS junk
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

@@ -1,0 +1,29 @@
+"""OMAD: logging a meal closes the previous interval and opens a new one."""
+
+import time
+
+
+def _switch_to_omad(pebble):
+    # Long-press Select -> Program Picker; OMAD is index 5 (scroll down 5×).
+    pebble.press("select", hold=True)
+    time.sleep(0.5)
+    for _ in range(5):
+        pebble.press("down")
+    pebble.press("select")   # commit OMAD
+    time.sleep(0.5)
+
+
+def test_omad_log_meal(pebble):
+    _switch_to_omad(pebble)
+    assert pebble.wait_for_log("omad-active"), "Expected OMAD state"
+
+    pebble.press("select")   # log first meal
+    time.sleep(0.3)
+    pebble.press("select")   # log second meal (closes first interval)
+    time.sleep(0.5)
+
+    # Stats should show 1 completed OMAD interval.
+    pebble.press("down", hold=True)
+    time.sleep(0.5)
+    assert pebble.wait_for_log("stats-total-fasts:1"), \
+        "Expected 1 OMAD interval in stats"

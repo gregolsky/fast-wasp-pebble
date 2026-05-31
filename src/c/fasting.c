@@ -1,0 +1,183 @@
+// Copyright 2025 Grzegorz Lachowski
+// SPDX-License-Identifier: Apache-2.0
+
+#include "fasting.h"
+#include "storage.h"
+#include "platform/time.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// ── Programs ──────────────────────────────────────────────────────────────────
+
+const Program PROGRAMS[NUM_PROGRAMS] = {
+    { "12:12", "Beginner",    12, 12, false },
+    { "14:10", "Crescendo",   14, 10, false },
+    { "16:8",  "Leangains",   16,  8, false },
+    { "18:6",  "",            18,  6, false },
+    { "20:4",  "Warrior",     20,  4, false },
+    { "OMAD",  "One Meal/Day",23,  1, true  },
+};
+
+const Program *program_by_index(uint8_t idx) {
+    if (idx >= NUM_PROGRAMS) return &PROGRAMS[0];
+    return &PROGRAMS[idx];
+}
+
+// ── Timer arithmetic ──────────────────────────────────────────────────────────
+
+int32_t fast_elapsed(int32_t started_at) {
+    return time_now() - started_at;
+}
+
+int32_t fast_remaining(int32_t started_at, uint8_t target_hours) {
+    return (int32_t)target_hours * 3600 - fast_elapsed(started_at);
+}
+
+bool fast_is_overtime(int32_t started_at, uint8_t target_hours) {
+    return fast_remaining(started_at, target_hours) < 0;
+}
+
+void fast_format_hms(int32_t total_seconds, char *buf) {
+    int32_t abs_s = total_seconds < 0 ? -total_seconds : total_seconds;
+    int32_t h = abs_s / 3600;
+    int32_t m = (abs_s % 3600) / 60;
+    int32_t s = abs_s % 60;
+    snprintf(buf, 16, "%02d:%02d:%02d", (int)h, (int)m, (int)s);
+}
+
+void fast_format_hm(int32_t total_seconds, char *buf) {
+    int32_t abs_s = total_seconds < 0 ? -total_seconds : total_seconds;
+    int32_t h = abs_s / 3600;
+    int32_t m = (abs_s % 3600) / 60;
+    snprintf(buf, 16, "%02d:%02d", (int)h, (int)m);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+static void close_eating_window_into_history(void) {
+    int32_t eat_started = storage_get_eat_started_at();
+    uint8_t eat_hours   = storage_get_eat_target_hours();
+    if (eat_started == 0) return;
+
+    int32_t  now          = time_now();
+    int32_t  actual_sec   = now - eat_started;
+    int32_t  target_sec   = (int32_t)eat_hours * 3600;
+    int32_t  overtime_sec = actual_sec > target_sec ? actual_sec - target_sec : 0;
+
+    // Eating window closures are not tracked in fast history on Pebble.
+    (void)overtime_sec;
+
+    storage_set_eat_started_at(0);
+    storage_set_eat_target_hours(0);
+}
+
+// ── Active fast ───────────────────────────────────────────────────────────────
+
+void start_fast(uint8_t program_idx) {
+    close_eating_window_into_history();
+
+    const Program *p = program_by_index(program_idx);
+    int32_t now = time_now();
+    storage_set_fast_started_at(now);
+    storage_set_fast_target_hours(p->fast_hours);
+    storage_set_program_id(program_idx);
+}
+
+void stop_fast(void) {
+    int32_t fast_started = storage_get_fast_started_at();
+    if (fast_started == 0) return;
+
+    int32_t  now          = time_now();
+    int32_t  actual_sec   = now - fast_started;
+    uint8_t  target_hours = storage_get_fast_target_hours();
+    int32_t  target_sec   = (int32_t)target_hours * 3600;
+    int32_t  overtime_sec = actual_sec > target_sec ? actual_sec - target_sec : 0;
+
+    HistoryEntry e = {
+        .started_at   = fast_started,
+        .duration_sec = actual_sec,
+        .overtime_sec = overtime_sec,
+    };
+    storage_push_fast_history(&e);
+
+    storage_set_fast_started_at(0);
+    storage_set_fast_target_hours(0);
+
+    // Open eating window if the program has one.
+    uint8_t  prog_idx = storage_get_program_id();
+    const Program *p  = program_by_index(prog_idx);
+    if (!p->is_omad && p->eat_hours > 0) {
+        storage_set_eat_started_at(now);
+        storage_set_eat_target_hours(p->eat_hours);
+    }
+}
+
+// ── Eating window ─────────────────────────────────────────────────────────────
+
+void eating_window_restart_fast(void) {
+    close_eating_window_into_history();
+    uint8_t prog_idx = storage_get_program_id();
+    start_fast(prog_idx);
+}
+
+void eating_window_end(void) {
+    close_eating_window_into_history();
+}
+
+// ── OMAD ──────────────────────────────────────────────────────────────────────
+
+void log_meal(void) {
+    int32_t prev = storage_get_omad_last_meal_at();
+    int32_t now  = time_now();
+
+    if (prev != 0) {
+        int32_t  actual_sec   = now - prev;
+        int32_t  target_sec   = 23 * 3600;
+        int32_t  overtime_sec = actual_sec > target_sec ? actual_sec - target_sec : 0;
+        HistoryEntry e = {
+            .started_at   = prev,
+            .duration_sec = actual_sec,
+            .overtime_sec = overtime_sec,
+        };
+        storage_push_fast_history(&e);
+    }
+
+    storage_set_omad_last_meal_at(now);
+}
+
+// ── Edit start time ───────────────────────────────────────────────────────────
+
+EditStartResult apply_fast_start_offset(int32_t offset_minutes) {
+    int32_t current_start = storage_get_fast_started_at();
+    int32_t new_start     = current_start + offset_minutes * 60;
+    int32_t now           = time_now();
+
+    if (new_start >= now)                     return EDIT_START_FUTURE;
+    if (new_start < now - 14 * 24 * 3600)    return EDIT_START_TOO_OLD;
+
+    storage_set_fast_started_at(new_start);
+    return EDIT_START_OK;
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+
+FastStats compute_fast_stats(void) {
+    FastStats stats = {0, 0, 0, 0};
+    uint8_t   count = 0;
+    uint64_t  total = 0;
+
+    HistoryEntry buf[FAST_HISTORY_CAPACITY];
+    uint8_t n = storage_read_fast_history(buf, FAST_HISTORY_CAPACITY);
+
+    for (uint8_t i = 0; i < n; i++) {
+        stats.total_fasts++;
+        total += (uint32_t)buf[i].duration_sec;
+        stats.total_overtime_seconds += (uint32_t)buf[i].overtime_sec;
+        if ((uint32_t)buf[i].duration_sec > stats.longest_seconds)
+            stats.longest_seconds = (uint32_t)buf[i].duration_sec;
+        count++;
+    }
+    stats.avg_seconds = count > 0 ? (uint32_t)(total / count) : 0;
+    return stats;
+}
