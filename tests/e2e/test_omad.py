@@ -4,12 +4,10 @@ import time
 
 
 def _switch_to_omad(pebble):
-    # Long-press Select -> Program Picker; OMAD is index 5 (scroll down 5×).
+    # From FAST/READY screen: long-press SELECT -> picker, navigate to OMAD (index 5).
     pebble.press("select", hold=True)
     time.sleep(0.5)
-    for _ in range(5):
-        pebble.press("down")
-    pebble.press("select")   # commit OMAD
+    pebble.select_program(5)
     time.sleep(0.5)
 
 

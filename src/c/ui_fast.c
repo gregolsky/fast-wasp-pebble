@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 // ── Shared state ──────────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ static Layer       *s_ring_layer;
 static TextLayer   *s_program_label;
 static TextLayer   *s_time_label;
 static TextLayer   *s_overtime_label;
+static TextLayer   *s_ends_at_label;
 static TextLayer   *s_hint_label;
 static AppTimer    *s_tick_timer;
 
@@ -28,6 +30,7 @@ static bool         s_eat_complete_fired;
 
 static char s_prog_buf[24];
 static char s_time_buf[16];
+static char s_ends_buf[16];
 static char s_hint_buf[24];
 
 // ── Ring drawing ──────────────────────────────────────────────────────────────
@@ -116,6 +119,7 @@ void ui_fast_refresh(void) {
                 snprintf(s_hint_buf, sizeof(s_hint_buf), "SEL: START");
             }
             snprintf(s_time_buf, sizeof(s_time_buf), "Ready");
+            s_ends_buf[0] = '\0';
             s_ring_pct = 0;
             APP_LOG(APP_LOG_LEVEL_INFO, "state-ready");
             break;
@@ -132,6 +136,19 @@ void ui_fast_refresh(void) {
             fast_format_hm(rem, s_time_buf);
             s_ring_pct = (int32_t)(el * 100 / target_sec);
             if (s_ring_pct > 100) s_ring_pct = 100;
+
+            // Compute wall-clock fast-end time.
+            time_t end_ts = (time_t)(started + target_sec);
+            struct tm *lt = localtime(&end_ts);
+            if (lt) {
+                if (clock_is_24h_style()) {
+                    strftime(s_ends_buf, sizeof(s_ends_buf), "ends %H:%M", lt);
+                } else {
+                    strftime(s_ends_buf, sizeof(s_ends_buf), "ends %l:%M%p", lt);
+                }
+            } else {
+                s_ends_buf[0] = '\0';
+            }
 
             const Program *p = program_by_index(prog_idx);
             snprintf(s_prog_buf, sizeof(s_prog_buf), "%s", p->label);
@@ -158,6 +175,7 @@ void ui_fast_refresh(void) {
             s_ring_pct = (int32_t)(el * 100 / target_sec);
             if (s_ring_pct > 100) s_ring_pct = 100;
 
+            s_ends_buf[0] = '\0';
             const Program *p = program_by_index(prog_idx);
             snprintf(s_prog_buf, sizeof(s_prog_buf), "%s  EAT", p->label);
             snprintf(s_hint_buf, sizeof(s_hint_buf), "SEL: FAST");
@@ -180,6 +198,7 @@ void ui_fast_refresh(void) {
             s_ring_pct = (int32_t)(el * 100 / target_sec);
             if (s_ring_pct > 100) s_ring_pct = 100;
 
+            s_ends_buf[0] = '\0';
             snprintf(s_prog_buf, sizeof(s_prog_buf), "OMAD");
             snprintf(s_hint_buf, sizeof(s_hint_buf), "SEL: ATE");
             APP_LOG(APP_LOG_LEVEL_INFO, "omad-active");
@@ -187,9 +206,10 @@ void ui_fast_refresh(void) {
         }
     }
 
-    text_layer_set_text(s_program_label, s_prog_buf);
-    text_layer_set_text(s_time_label,    s_time_buf);
-    text_layer_set_text(s_hint_label,    s_hint_buf);
+    text_layer_set_text(s_program_label,  s_prog_buf);
+    text_layer_set_text(s_time_label,     s_time_buf);
+    text_layer_set_text(s_ends_at_label,  s_ends_buf);
+    text_layer_set_text(s_hint_label,     s_hint_buf);
     text_layer_set_text(s_overtime_label, show_overtime ? "OVERTIME" : "");
     layer_mark_dirty(s_ring_layer);
 }
@@ -299,10 +319,10 @@ static void window_load(Window *win) {
     layer_add_child(root, s_ring_layer);
 
     // Program label — top
-    s_program_label = text_layer_create(GRect(4, 4, bounds.size.w - 8, 20));
+    s_program_label = text_layer_create(GRect(4, 2, bounds.size.w - 8, 26));
     text_layer_set_background_color(s_program_label, GColorClear);
     text_layer_set_text_color(s_program_label, GColorWhite);
-    text_layer_set_font(s_program_label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+    text_layer_set_font(s_program_label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(s_program_label, GTextAlignmentCenter);
     layer_add_child(root, text_layer_get_layer(s_program_label));
 
@@ -326,6 +346,14 @@ static void window_load(Window *win) {
     text_layer_set_text_alignment(s_time_label, GTextAlignmentCenter);
     layer_add_child(root, text_layer_get_layer(s_time_label));
 
+    // Fast-end wall-clock label — below countdown, ACTIVE state only
+    s_ends_at_label = text_layer_create(GRect(4, bounds.size.h / 2 + 22, bounds.size.w - 8, 18));
+    text_layer_set_background_color(s_ends_at_label, GColorClear);
+    text_layer_set_text_color(s_ends_at_label, GColorLightGray);
+    text_layer_set_font(s_ends_at_label, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_text_alignment(s_ends_at_label, GTextAlignmentCenter);
+    layer_add_child(root, text_layer_get_layer(s_ends_at_label));
+
     // Hint row — bottom
     s_hint_label = text_layer_create(GRect(4, bounds.size.h - 20, bounds.size.w - 8, 18));
     text_layer_set_background_color(s_hint_label, GColorClear);
@@ -347,6 +375,7 @@ static void window_unload(Window *win) {
     cancel_tick();
     text_layer_destroy(s_program_label);
     text_layer_destroy(s_time_label);
+    text_layer_destroy(s_ends_at_label);
     text_layer_destroy(s_overtime_label);
     text_layer_destroy(s_hint_label);
     layer_destroy(s_ring_layer);

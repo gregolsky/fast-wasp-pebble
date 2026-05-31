@@ -11,12 +11,12 @@
 // ── Programs ──────────────────────────────────────────────────────────────────
 
 const Program PROGRAMS[NUM_PROGRAMS] = {
-    { "12:12", "Beginner",    12, 12, false },
-    { "14:10", "Crescendo",   14, 10, false },
-    { "16:8",  "Leangains",   16,  8, false },
-    { "18:6",  "",            18,  6, false },
-    { "20:4",  "Warrior",     20,  4, false },
-    { "OMAD",  "One Meal/Day",23,  1, true  },
+    { "12:12", "Worker Wasp",   12, 12, false },
+    { "14:10", "Scouting Wasp", 14, 10, false },
+    { "16:8",  "Hunter Wasp",   16,  8, false },
+    { "18:6",  "Soldier Wasp",  18,  6, false },
+    { "20:4",  "Warrior Wasp",  20,  4, false },
+    { "OMAD",  "Warrior Queen", 23,  1, true  },
 };
 
 const Program *program_by_index(uint8_t idx) {

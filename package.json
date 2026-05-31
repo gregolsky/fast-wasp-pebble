@@ -6,7 +6,7 @@
   "private": true,
   "dependencies": {},
   "pebble": {
-    "displayName": "Fast Pebble",
+    "displayName": "FastWasp",
     "uuid": "a7e8c1f2-3d4b-4e5f-8a9b-0c1d2e3f4a5b",
     "sdkVersion": "3",
     "enableMultiJS": true,
@@ -20,7 +20,10 @@
     },
     "messageKeys": [],
     "resources": {
-      "media": []
+      "media": [
+        { "type": "png", "name": "IMAGE_MENU_ICON",
+          "file": "images/menu_icon.png", "menuIcon": true }
+      ]
     }
   }
 }

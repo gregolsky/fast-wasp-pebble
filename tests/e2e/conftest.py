@@ -1,32 +1,23 @@
-"""
-Pebble emulator fixture for Fast Pebble e2e tests.
+"""E2E fixture for Fast Pebble. Run inside Docker: see run-e2e.sh."""
+import subprocess, time, threading, queue, os, glob, pytest
 
-Usage:
-    pytest tests/e2e --platform=emery
-    pytest tests/e2e --platform=diorite
+PLATFORM     = "basalt"
+SDK_PY       = "/opt/pebble-sdk-4.5-linux64/.env/bin/python"
+DRIVER       = os.path.join(os.path.dirname(__file__), "driver.py")
+ARTIFACT_DIR = os.path.join(os.path.dirname(__file__), "_artifacts")
 
-Prerequisites:
-    - Pebble SDK (Core Devices fork) installed and on PATH
-    - `pebble build` has already run (produces build/*.pbw)
-    - `libpebble2` pip package for emulator control
 
-Each test gets a fresh emulator with wiped persistent storage.
-"""
+def _find_pbw():
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    m = glob.glob(os.path.join(root, "build", "*.pbw"))
+    if not m:
+        raise FileNotFoundError("No .pbw in build/ -- run pebble build first.")
+    return m[0]
 
-import subprocess
-import time
-import glob
-import os
-import pytest
-
-# ── CLI option ────────────────────────────────────────────────────────────────
 
 def pytest_addoption(parser):
-    parser.addoption(
-        "--platform", action="store", default="emery",
-        choices=["emery", "diorite"],
-        help="Pebble emulator platform (default: emery)"
-    )
+    parser.addoption("--platform", default=PLATFORM, choices=["basalt"],
+                     help="Pebble platform (basalt only; diorite/emery QEMU broken)")
 
 
 @pytest.fixture(scope="session")
@@ -34,131 +25,107 @@ def platform(request):
     return request.config.getoption("--platform")
 
 
-# ── Emulator helper ──────────────────────────────────────────────────────────
-
 class PebbleEmulator:
-    """Thin wrapper around the pebble CLI for driving the emulator."""
-
-    BUTTON_MAP = {
-        "up":     "up",
-        "select": "select",
-        "down":   "down",
-        "back":   "back",
-    }
-
-    def __init__(self, platform: str):
-        self.platform = platform
-        self._proc = None
-        self._artifact_dir = os.path.join(
-            os.path.dirname(__file__), "_artifacts"
-        )
-        os.makedirs(self._artifact_dir, exist_ok=True)
+    def __init__(self, plat):
+        self.platform = plat
+        self._log_proc = None
+        self._log_q    = queue.Queue()
+        self._log_hist = []
+        os.makedirs(ARTIFACT_DIR, exist_ok=True)
 
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
     def start(self):
-        self._proc = subprocess.Popen(
-            ["pebble", "emulator", "--platform", self.platform],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        time.sleep(3)  # give emulator time to boot
+        subprocess.run(["pebble", "wipe", "--emulator", self.platform],
+                       capture_output=True)
+        subprocess.run(["pebble", "install", "--emulator", self.platform,
+                        _find_pbw()], check=True, capture_output=True)
+        time.sleep(3)
+        self._start_logs()
 
     def stop(self):
-        if self._proc:
-            self._proc.terminate()
-            self._proc.wait(timeout=5)
-            self._proc = None
+        if self._log_proc:
+            self._log_proc.terminate()
+            try:
+                self._log_proc.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                self._log_proc.kill()
+            self._log_proc = None
+        subprocess.run(["pebble", "kill"], capture_output=True)
 
-    def wipe(self):
-        subprocess.run(
-            ["pebble", "wipe", "--emulator", self.platform],
-            check=True, capture_output=True
-        )
-
-    def install(self, pbw_path: str):
-        subprocess.run(
-            ["pebble", "install", "--emulator", self.platform, pbw_path],
-            check=True, capture_output=True
-        )
+    def reinstall(self):
+        """Reinstall (relaunch) the app without wiping storage."""
+        subprocess.run(["pebble", "install", "--emulator", self.platform,
+                        _find_pbw()], capture_output=True)
+        time.sleep(2)
 
     # ── Input ─────────────────────────────────────────────────────────────────
 
-    def press(self, button: str, hold: bool = False):
-        """Send a button press (short or long) to the emulator."""
-        btn = self.BUTTON_MAP[button.lower()]
+    def press(self, button, hold=False):
+        cmd = [SDK_PY, DRIVER, self.platform, button.lower()]
         if hold:
-            subprocess.run(
-                ["pebble", "emu-control", "--emulator", self.platform,
-                 "--button", btn, "--long"],
-                check=True, capture_output=True
-            )
-        else:
-            subprocess.run(
-                ["pebble", "emu-control", "--emulator", self.platform,
-                 "--button", btn],
-                check=True, capture_output=True
-            )
-        time.sleep(0.3)
+            cmd += ["--hold-ms", "800"]
+        subprocess.run(cmd, check=True)
+        time.sleep(0.35)
 
-    # ── Time control ──────────────────────────────────────────────────────────
-
-    def set_time(self, epoch: int):
-        """Advance the emulator's clock to the given Unix epoch seconds."""
-        subprocess.run(
-            ["pebble", "emu-time-format", "--emulator", self.platform,
-             "--time", str(epoch)],
-            check=True, capture_output=True
-        )
-        time.sleep(0.5)
+    def select_program(self, idx):
+        """Navigate from picker position 0 down to idx, then press select."""
+        for _ in range(idx):
+            self.press("down")
+        self.press("select")
 
     # ── Observation ──────────────────────────────────────────────────────────
 
-    def screenshot(self, name: str) -> str:
-        """Take a screenshot and save to _artifacts/; returns the path."""
-        path = os.path.join(self._artifact_dir, f"{name}.png")
-        subprocess.run(
-            ["pebble", "screenshot", "--emulator", self.platform, path],
-            check=True, capture_output=True
+    def _start_logs(self):
+        self._log_proc = subprocess.Popen(
+            ["pebble", "logs", "--emulator", self.platform],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, bufsize=1
         )
-        return path
+        self._log_hist.clear()
 
-    def wait_for_log(self, substring: str, timeout: float = 5.0) -> bool:
-        """
-        Poll the pebble log for a line containing `substring`.
-        Returns True if found within `timeout` seconds, False otherwise.
-        We rely on APP_LOG lines emitted by the app for key state transitions.
-        """
+        def _reader():
+            for line in self._log_proc.stdout:
+                self._log_hist.append(line)
+                self._log_q.put(line)
+
+        threading.Thread(target=_reader, daemon=True).start()
+
+    def wait_for_log(self, s, timeout=10.0):
+        if any(s in l for l in self._log_hist):
+            return True
         deadline = time.time() + timeout
         while time.time() < deadline:
-            result = subprocess.run(
-                ["pebble", "logs", "--emulator", self.platform, "--count", "50"],
-                capture_output=True, text=True
-            )
-            if substring in result.stdout:
-                return True
-            time.sleep(0.25)
+            try:
+                if s in self._log_q.get(timeout=0.5):
+                    return True
+            except queue.Empty:
+                pass
         return False
 
+    def screenshot(self, name):
+        path = os.path.join(ARTIFACT_DIR, f"{name}.png")
+        subprocess.run(["pebble", "screenshot", "--emulator", self.platform, path],
+                       capture_output=True)
+        return path
 
-# ── Fixtures ─────────────────────────────────────────────────────────────────
 
-def _find_pbw() -> str:
-    root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    matches = glob.glob(os.path.join(root, "build", "*.pbw"))
-    if not matches:
-        raise FileNotFoundError(
-            "No .pbw found in build/. Run `make build` first."
-        )
-    return matches[0]
+@pytest.fixture(scope="function")
+def pebble_raw(platform):
+    """Fresh emulator with picker visible -- no program pre-selected."""
+    emu = PebbleEmulator(platform)
+    emu.start()
+    yield emu
+    emu.stop()
 
 
 @pytest.fixture(scope="function")
 def pebble(platform):
-    """Per-test emulator: start, wipe, install, yield, stop."""
+    """Fresh emulator with 12:12 selected, app in READY state."""
     emu = PebbleEmulator(platform)
     emu.start()
-    emu.wipe()
-    emu.install(_find_pbw())
-    time.sleep(1)  # let the app launch
+    emu.select_program(0)
+    assert emu.wait_for_log("state-ready"), \
+        "Fixture setup: expected state-ready after selecting 12:12"
     yield emu
     emu.stop()

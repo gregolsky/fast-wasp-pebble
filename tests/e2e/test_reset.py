@@ -1,4 +1,4 @@
-"""Settings → Reset wipes all data and returns to Program Picker."""
+"""Settings -> Reset wipes all data and returns to Program Picker."""
 
 import time
 
@@ -20,16 +20,16 @@ def test_reset_clears_state(pebble):
 
     _open_settings(pebble)
 
-    # Navigate to "Reset Data" (row 1, second item).
+    # Navigate to "Reset Data" (second item) and confirm twice.
     pebble.press("down")
-    pebble.press("select")   # first press: arm confirm
+    pebble.press("select")   # arm confirm
     time.sleep(0.3)
-    pebble.press("select")   # second press: confirm reset
+    pebble.press("select")   # confirm reset
     time.sleep(0.5)
 
-    # After reset the app should return to picker (no saved program).
+    assert pebble.wait_for_log("storage-reset"), "Expected storage-reset log after reset"
+
+    # App exits after stack pop; reinstall to verify picker appears on relaunch.
+    pebble.reinstall()
     assert pebble.wait_for_log("state-picker"), \
-        "Expected Program Picker after reset"
-    # Wakeup id should be -1 (no wakeup) logged.
-    assert pebble.wait_for_log("storage-reset"), \
-        "Expected storage-reset log after reset"
+        "Expected Program Picker on relaunch after reset"

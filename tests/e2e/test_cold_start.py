@@ -3,12 +3,11 @@
 import time
 
 
-def test_first_launch_shows_picker(pebble):
-    # No program stored -> picker should be the first screen.
-    # Scroll down twice and select 16:8 (index 2).
-    pebble.press("down")
-    pebble.press("down")
-    pebble.press("select")
+def test_first_launch_shows_picker(pebble_raw):
+    # No program stored -> picker is the first screen.
+    # Scroll down twice to reach 16:8 (index 2) and select it.
+    pebble_raw.press("down")
+    pebble_raw.press("down")
+    pebble_raw.press("select")
     time.sleep(0.5)
-    # App logs the selected program on transition.
-    assert pebble.wait_for_log("program-selected"), "Expected program-selected log"
+    assert pebble_raw.wait_for_log("program-selected"), "Expected program-selected log"

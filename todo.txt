@@ -1,0 +1,12 @@
+[ ] Add app icon (PNG resource in resources/, wire into appinfo.json / package.json)
+[ ] Add subtitle/description to each program in the picker
+    - wasp-themed taglines, e.g. "Worker Wasp", "Scouting Wasp", "Hunter Wasp", "Warrior Queen"
+    - show as a smaller second line below the program label in ui_picker.c
+[ ] Display estimated fast-end time (HH:MM wall clock) on the ring UI for ACTIVE state
+    - compute: fast_started_at + target_hours*3600, format as local time
+    - show as a small label inside or below the ring on ui_fast.c
+[ ] Fix and run e2e tests against basalt emulator
+    - tests/e2e/ harness is written (conftest.py + driver.py)
+    - blocker: QEMU needs a display; try SDL_VIDEODRIVER=dummy for headless Docker
+    - update run-e2e.sh: drop -e DISPLAY / X11 mount, add -e SDL_VIDEODRIVER=dummy
+    - verify pebble install --emulator basalt works headless, then re-run pytest

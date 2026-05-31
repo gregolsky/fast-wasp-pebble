@@ -22,7 +22,7 @@ UNIT_SRCS := \
 
 UNIT_BIN := tests/unit/build/run_tests
 
-.PHONY: test build clean
+.PHONY: test build clean e2e
 
 test: $(UNIT_BIN)
 	$(UNIT_BIN)
@@ -33,6 +33,9 @@ $(UNIT_BIN): $(UNIT_SRCS)
 
 build:
 	pebble build
+
+e2e:
+	./run-e2e.sh
 
 clean:
 	rm -rf tests/unit/build build
