@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0] — 2026-06-01
+
+### 🐛 Fixed
+- Stats screen no longer crashes the app — rewrote with a plain TextLayer (no ScrollLayer), fixed window lifecycle
+
+---
+
 ## [1.2.0] — 2026-06-01
 
 ### 🗑️ Removed

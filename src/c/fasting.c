@@ -153,7 +153,7 @@ FastStats compute_fast_stats(void) {
     uint8_t   count = 0;
     uint64_t  total = 0;
 
-    HistoryEntry buf[FAST_HISTORY_CAPACITY];
+    static HistoryEntry buf[FAST_HISTORY_CAPACITY];
     uint8_t n = storage_read_fast_history(buf, FAST_HISTORY_CAPACITY);
 
     for (uint8_t i = 0; i < n; i++) {
