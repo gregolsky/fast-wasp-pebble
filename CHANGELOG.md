@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.0] — 2026-06-01
+
+### 🗑️ Removed
+- Edit Start Time screen (Up button was confusing — opened a blank-looking screen)
+
+### 🔧 Changed
+- **Up** now opens the Stats screen from any state (was buried under long-press Down)
+
+---
+
 ## [1.1.0] — 2026-06-01 🐝
 
 First public release.

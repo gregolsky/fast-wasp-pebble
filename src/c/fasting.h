@@ -58,18 +58,6 @@ void eating_window_end(void);
 // Log "I ate my meal": closes previous OMAD interval into history, opens new one.
 void log_meal(void);
 
-// ── Edit start time ───────────────────────────────────────────────────────────
-
-typedef enum {
-    EDIT_START_OK,
-    EDIT_START_FUTURE,    // "Too late"
-    EDIT_START_TOO_OLD,   // "Too old"
-} EditStartResult;
-
-// Apply offset_minutes (positive or negative) to the stored fast start time.
-// The editing nudge is always multiples of 15 min; this validates the result.
-EditStartResult apply_fast_start_offset(int32_t offset_minutes);
-
 // ── Fasting stats (computed from history ring buffer) ─────────────────────────
 
 typedef struct {

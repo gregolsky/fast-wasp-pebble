@@ -146,20 +146,6 @@ void log_meal(void) {
     storage_set_omad_last_meal_at(now);
 }
 
-// ── Edit start time ───────────────────────────────────────────────────────────
-
-EditStartResult apply_fast_start_offset(int32_t offset_minutes) {
-    int32_t current_start = storage_get_fast_started_at();
-    int32_t new_start     = current_start + offset_minutes * 60;
-    int32_t now           = time_now();
-
-    if (new_start >= now)                     return EDIT_START_FUTURE;
-    if (new_start < now - 14 * 24 * 3600)    return EDIT_START_TOO_OLD;
-
-    storage_set_fast_started_at(new_start);
-    return EDIT_START_OK;
-}
-
 // ── Stats ─────────────────────────────────────────────────────────────────────
 
 FastStats compute_fast_stats(void) {

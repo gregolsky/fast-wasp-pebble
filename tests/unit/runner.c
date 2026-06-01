@@ -47,14 +47,6 @@ void test_omad_overtime_recorded(void);
 void test_elapsed_before_target(void);
 void test_elapsed_at_23h(void);
 
-// test_edit_start.c
-void test_offset_zero_ok(void);
-void test_offset_minus_15_ok(void);
-void test_offset_plus_15_ok(void);
-void test_future_commit_refused(void);
-void test_too_old_refused(void);
-void test_exactly_14_days_ago_ok(void);
-
 // test_ring.c
 void test_empty_ring(void);
 void test_push_one(void);
@@ -103,13 +95,6 @@ int main(void) {
     RUN_TEST(test_omad_overtime_recorded);
     RUN_TEST(test_elapsed_before_target);
     RUN_TEST(test_elapsed_at_23h);
-
-    RUN_TEST(test_offset_zero_ok);
-    RUN_TEST(test_offset_minus_15_ok);
-    RUN_TEST(test_offset_plus_15_ok);
-    RUN_TEST(test_future_commit_refused);
-    RUN_TEST(test_too_old_refused);
-    RUN_TEST(test_exactly_14_days_ago_ok);
 
     RUN_TEST(test_empty_ring);
     RUN_TEST(test_push_one);
