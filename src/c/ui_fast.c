@@ -17,6 +17,7 @@
 
 static Window      *s_window;
 static Layer       *s_ring_layer;
+static TextLayer   *s_mode_label;
 static TextLayer   *s_program_label;
 static TextLayer   *s_time_label;
 static TextLayer   *s_overtime_label;
@@ -28,10 +29,14 @@ static FastUIState  s_state;
 static bool         s_fast_complete_fired;
 static bool         s_eat_complete_fired;
 
+static char s_mode_buf[16];
 static char s_prog_buf[24];
 static char s_time_buf[16];
 static char s_ends_buf[16];
 static char s_hint_buf[24];
+
+static int  s_banner_ticks;
+static char s_banner_buf[40];
 
 // ── Ring drawing ──────────────────────────────────────────────────────────────
 
@@ -68,6 +73,7 @@ static void schedule_tick(void);
 
 static void tick_cb(void *ctx) {
     (void)ctx;
+    if (s_banner_ticks > 0) s_banner_ticks--;
     ui_fast_refresh();
     schedule_tick();
 }
@@ -111,10 +117,12 @@ void ui_fast_refresh(void) {
     switch (s_state) {
         case FAST_STATE_READY: {
             if (prog_idx == 0xFF) {
+                s_mode_buf[0] = '\0';
                 snprintf(s_prog_buf, sizeof(s_prog_buf), "Select Program");
                 snprintf(s_hint_buf, sizeof(s_hint_buf), "Hold SEL to pick");
             } else {
                 const Program *p = program_by_index(prog_idx);
+                snprintf(s_mode_buf, sizeof(s_mode_buf), "Ready");
                 snprintf(s_prog_buf, sizeof(s_prog_buf), "%s", p->label);
                 snprintf(s_hint_buf, sizeof(s_hint_buf), "SEL: START");
             }
@@ -151,6 +159,7 @@ void ui_fast_refresh(void) {
             }
 
             const Program *p = program_by_index(prog_idx);
+            snprintf(s_mode_buf, sizeof(s_mode_buf), "Fasting");
             snprintf(s_prog_buf, sizeof(s_prog_buf), "%s", p->label);
             snprintf(s_hint_buf, sizeof(s_hint_buf), "SEL: STOP");
             APP_LOG(APP_LOG_LEVEL_INFO, "fast-active");
@@ -177,7 +186,8 @@ void ui_fast_refresh(void) {
 
             s_ends_buf[0] = '\0';
             const Program *p = program_by_index(prog_idx);
-            snprintf(s_prog_buf, sizeof(s_prog_buf), "%s  EAT", p->label);
+            snprintf(s_mode_buf, sizeof(s_mode_buf), "Eating");
+            snprintf(s_prog_buf, sizeof(s_prog_buf), "%s", p->label);
             snprintf(s_hint_buf, sizeof(s_hint_buf), "SEL: FAST");
             APP_LOG(APP_LOG_LEVEL_INFO, "eat-active");
 
@@ -199,6 +209,7 @@ void ui_fast_refresh(void) {
             if (s_ring_pct > 100) s_ring_pct = 100;
 
             s_ends_buf[0] = '\0';
+            snprintf(s_mode_buf, sizeof(s_mode_buf), "Fasting");
             snprintf(s_prog_buf, sizeof(s_prog_buf), "OMAD");
             snprintf(s_hint_buf, sizeof(s_hint_buf), "SEL: ATE");
             APP_LOG(APP_LOG_LEVEL_INFO, "omad-active");
@@ -206,12 +217,31 @@ void ui_fast_refresh(void) {
         }
     }
 
+    text_layer_set_text(s_mode_label,     s_mode_buf);
     text_layer_set_text(s_program_label,  s_prog_buf);
     text_layer_set_text(s_time_label,     s_time_buf);
     text_layer_set_text(s_ends_at_label,  s_ends_buf);
-    text_layer_set_text(s_hint_label,     s_hint_buf);
+    text_layer_set_text(s_hint_label,     s_banner_ticks > 0 ? s_banner_buf : s_hint_buf);
     text_layer_set_text(s_overtime_label, show_overtime ? "OVERTIME" : "");
     layer_mark_dirty(s_ring_layer);
+}
+
+// ── Banner ────────────────────────────────────────────────────────────────────
+
+void ui_fast_show_banner(NotifyEvent ev) {
+    switch (ev) {
+        case NOTIFY_FAST_COMPLETE:
+            snprintf(s_banner_buf, sizeof(s_banner_buf), "Fast done! SEL=STOP");
+            break;
+        case NOTIFY_EAT_WINDOW_CLOSED:
+            snprintf(s_banner_buf, sizeof(s_banner_buf), "Eat done! SEL=FAST");
+            break;
+        case NOTIFY_OMAD_TARGET:
+            snprintf(s_banner_buf, sizeof(s_banner_buf), "OMAD target! SEL=ATE");
+            break;
+    }
+    s_banner_ticks = 5;
+    if (s_window) text_layer_set_text(s_hint_label, s_banner_buf);
 }
 
 // ── Button handlers ───────────────────────────────────────────────────────────
@@ -318,16 +348,24 @@ static void window_load(Window *win) {
     layer_set_update_proc(s_ring_layer, ring_layer_draw);
     layer_add_child(root, s_ring_layer);
 
-    // Program label — top
-    s_program_label = text_layer_create(GRect(4, 2, bounds.size.w - 8, 26));
+    // Mode label — top row (e.g. "Fasting", "Eating", "Ready")
+    s_mode_label = text_layer_create(GRect(4, 20, bounds.size.w - 8, 16));
+    text_layer_set_background_color(s_mode_label, GColorClear);
+    text_layer_set_text_color(s_mode_label, GColorLightGray);
+    text_layer_set_font(s_mode_label, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+    text_layer_set_text_alignment(s_mode_label, GTextAlignmentCenter);
+    layer_add_child(root, text_layer_get_layer(s_mode_label));
+
+    // Program label — second row (e.g. "16:8", "OMAD")
+    s_program_label = text_layer_create(GRect(4, 34, bounds.size.w - 8, 22));
     text_layer_set_background_color(s_program_label, GColorClear);
     text_layer_set_text_color(s_program_label, GColorWhite);
-    text_layer_set_font(s_program_label, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+    text_layer_set_font(s_program_label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
     text_layer_set_text_alignment(s_program_label, GTextAlignmentCenter);
     layer_add_child(root, text_layer_get_layer(s_program_label));
 
     // Overtime badge
-    s_overtime_label = text_layer_create(GRect(4, bounds.size.h / 2 - 48, bounds.size.w - 8, 20));
+    s_overtime_label = text_layer_create(GRect(4, bounds.size.h / 2 - 32, bounds.size.w - 8, 20));
     text_layer_set_background_color(s_overtime_label, GColorClear);
 #ifdef PBL_COLOR
     text_layer_set_text_color(s_overtime_label, GColorRed);
@@ -339,7 +377,7 @@ static void window_load(Window *win) {
     layer_add_child(root, text_layer_get_layer(s_overtime_label));
 
     // Main time display — centre
-    s_time_label = text_layer_create(GRect(4, bounds.size.h / 2 - 18, bounds.size.w - 8, 36));
+    s_time_label = text_layer_create(GRect(4, bounds.size.h / 2 - 8, bounds.size.w - 8, 36));
     text_layer_set_background_color(s_time_label, GColorClear);
     text_layer_set_text_color(s_time_label, GColorWhite);
     text_layer_set_font(s_time_label, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
@@ -366,6 +404,7 @@ static void window_load(Window *win) {
 
     s_fast_complete_fired = false;
     s_eat_complete_fired  = false;
+    s_banner_ticks        = 0;
     ui_fast_refresh();
     schedule_tick();
 }
@@ -373,6 +412,7 @@ static void window_load(Window *win) {
 static void window_unload(Window *win) {
     (void)win;
     cancel_tick();
+    text_layer_destroy(s_mode_label);
     text_layer_destroy(s_program_label);
     text_layer_destroy(s_time_label);
     text_layer_destroy(s_ends_at_label);

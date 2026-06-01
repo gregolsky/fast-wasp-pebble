@@ -11,9 +11,12 @@ void notify_schedule(NotifyEvent event, int32_t target_at) {
     notify_cancel();
 
     WakeupId id = wakeup_schedule((time_t)target_at, (int32_t)event, true);
-    if (id >= 0) {
-        storage_set_wakeup_id((int32_t)id);
+    if (id < 0) {
+        APP_LOG(APP_LOG_LEVEL_ERROR, "wakeup_schedule failed id=%ld target=%ld event=%d",
+                (long)id, (long)target_at, (int)event);
+        return;
     }
+    storage_set_wakeup_id((int32_t)id);
 }
 
 void notify_cancel(void) {
@@ -49,7 +52,18 @@ void notify_handle(NotifyEvent event) {
                 break;
         }
     }
-    // Banner text is rendered by the calling UI layer (main.c).
+}
+
+static NotifyInAppCallback s_inapp_cb;
+
+static void wakeup_adapter(WakeupId id, int32_t reason) {
+    (void)id;
+    if (s_inapp_cb) s_inapp_cb(reason);
+}
+
+void notify_subscribe_inapp(NotifyInAppCallback cb) {
+    s_inapp_cb = cb;
+    wakeup_service_subscribe(wakeup_adapter);
 }
 
 #else
@@ -81,5 +95,6 @@ void notify_cancel(void) {
 
 bool notify_check_wakeup(NotifyEvent *event) { (void)event; return false; }
 void notify_handle(NotifyEvent event)        { (void)event; }
+void notify_subscribe_inapp(NotifyInAppCallback cb) { (void)cb; }
 
 #endif

@@ -22,3 +22,8 @@ bool notify_check_wakeup(NotifyEvent *event);
 
 // Vibrate + show appropriate banner for the event (called after wakeup relaunch).
 void notify_handle(NotifyEvent event);
+
+// Register a callback invoked when a wakeup fires while the app is already open.
+// The callback receives the NotifyEvent reason cast to int32_t.
+typedef void (*NotifyInAppCallback)(int32_t event_reason);
+void notify_subscribe_inapp(NotifyInAppCallback cb);
