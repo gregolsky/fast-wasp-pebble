@@ -1,0 +1,40 @@
+name: build
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build pbw
+        run: |
+          docker run --rm -v "$PWD:/pebble" -w /pebble rebble/pebble-sdk \
+            bash -c "pebble build"
+
+      - name: Verify artifact
+        run: test -f build/pebble.pbw && ls -la build/pebble.pbw
+
+      - name: Upload pbw artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fastwasp-pbw
+          path: build/pebble.pbw
+          if-no-files-found: error
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/pebble.pbw
+          generate_release_notes: true
+          draft: false
+          prerelease: false
