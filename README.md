@@ -19,6 +19,12 @@ A glanceable, native intermittent-fasting tracker for the new Pebble devices fro
 - ⚙️ **Settings** — vibration toggle, reset data
 - 🔒 **100% offline** — all data stored locally in watch persistent storage
 
+## 📸 Screenshots
+
+| Programs | Active fast |
+|----------|-------------|
+| ![Program picker](screenshots/screenshot-programs.png) | ![Active fast](screenshots/screenshot-fast.png) |
+
 ---
 
 ## ⌚ Supported devices
