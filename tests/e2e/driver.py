@@ -39,7 +39,8 @@ def press(platform, button, hold_ms):
     send(btn_val)
     time.sleep(hold_ms / 1000.0)
     send(0)
-    transport.disconnect()
+    if hasattr(transport, 'disconnect'):
+        transport.disconnect()
 
 
 if __name__ == '__main__':
