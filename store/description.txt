@@ -1,14 +1,14 @@
-FastWasp is a free, native intermittent-fasting tracker for the new Pebble devices from Core Devices. Everything runs on the watch — no companion app, no phone, no accounts, no internet.
+FastWasp is a free, native intermittent-fasting tracker for the new Pebble devices from Core Devices. Everything runs on the watch - no companion app, no phone, no accounts, no internet.
 
 6 fasting programs built in:
-- 12:12 — Worker Wasp
-- 14:10 — Scouting Wasp
-- 16:8 — Hunter Wasp
-- 18:6 — Soldier Wasp
-- 20:4 — Warrior Wasp
-- OMAD — Warrior Queen
+- 12:12 - Worker Wasp
+- 14:10 - Scouting Wasp
+- 16:8 - Hunter Wasp
+- 18:6 - Soldier Wasp
+- 20:4 - Warrior Wasp
+- OMAD - Warrior Queen
 
-Glance-first UI. The main screen always shows a circular progress ring filling toward your target, a large HH:MM:SS countdown, and — once you pass the target — an OVERTIME badge with an upward counter. No hunting through menus to see where you are.
+Glance-first UI. The main screen always shows a circular progress ring filling toward your target, a large HH:MM:SS countdown, and - once you pass the target - an OVERTIME badge with an upward counter. No hunting through menus to see where you are.
 
 Eating window tracking. After you stop a fast, FastWasp immediately starts counting down your eating window. A wrist alert fires when it closes.
 
@@ -16,7 +16,7 @@ OMAD mode. Tracks elapsed time since your last meal with a thin progress bar tow
 
 Wrist alerts. A wakeup is scheduled at your target time so the watch vibrates and shows a banner even if you close the app. Long pulse for fast complete, double pulse for eating window closed.
 
-Stats. Total fasts completed, average fast length, longest fast, and total overtime accumulated — all on one scrollable screen. Press Up to open from any state.
+Stats. Total fasts completed, average fast length, longest fast, and total overtime accumulated - all on one scrollable screen. Press Up to open from any state.
 
 100% offline. All data lives in watch persistent storage. Nothing leaves your wrist.
 

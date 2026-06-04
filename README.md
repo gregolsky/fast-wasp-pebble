@@ -44,13 +44,20 @@ Grab the latest `pebble.pbw` from the [Releases page](../../releases) and sidelo
 
 ## 🛠️ Build from source
 
-Requires Docker (uses the official `rebble/pebble-sdk` image):
+Install [`uv`](https://docs.astral.sh/uv/) and the Pebble SDK (one-time):
 
 ```bash
-docker run --rm -v "$PWD:/pebble" -w /pebble rebble/pebble-sdk bash -c "pebble build"
+uv tool install pebble-tool
+pebble sdk install latest
 ```
 
-Output lands at `build/pebble.pbw`. The same workflow runs in GitHub Actions on every push. 🤖
+Then build:
+
+```bash
+pebble build
+```
+
+Output lands at `build/fast-pebble.pbw`. The same workflow runs in GitHub Actions on every push. 🤖
 
 To deploy directly to a phone-connected watch:
 

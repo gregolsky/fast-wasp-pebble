@@ -15,26 +15,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build pbw
+      - uses: astral-sh/setup-uv@v3
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Cache Pebble SDK
+        uses: actions/cache@v4
+        with:
+          path: ~/.pebble-sdk
+          key: pebble-sdk-${{ runner.os }}-latest
+
+      - name: Install pebble-tool + SDK
         run: |
-          docker run --rm -v "$PWD:/pebble" -w /pebble rebble/pebble-sdk \
-            bash -c "pebble build"
+          uv tool install pebble-tool --python 3.13
+          pebble sdk install latest
+
+      - name: Build pbw
+        run: pebble build
 
       - name: Verify artifact
-        run: test -f build/pebble.pbw && ls -la build/pebble.pbw
+        run: ls -la build/*.pbw
 
       - name: Upload pbw artifact
         uses: actions/upload-artifact@v4
         with:
           name: fastwasp-pbw
-          path: build/pebble.pbw
+          path: build/*.pbw
           if-no-files-found: error
 
       - name: Create release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/pebble.pbw
+          files: build/*.pbw
           generate_release_notes: true
           draft: false
           prerelease: false

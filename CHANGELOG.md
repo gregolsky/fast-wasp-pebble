@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.5.0] — 2026-06-04
+
+### 🔧 Tooling
+
+- Switched CI build from `rebble/pebble-sdk` Docker image to `uv`-based `pebble-tool` install (`uv tool install pebble-tool` + `pebble sdk install latest`) — the Docker image was out of date and caused a 400 on developer.repebble.com submission
+- `deploy.sh` likewise drops Docker and calls the locally-installed `pebble` CLI directly
+- Pebble SDK arm toolchain cached in CI (`~/.pebble-sdk`) to keep build times fast
+- No functional or UI changes
+
+---
+
 ## [1.4.0] — 2026-06-04
 
 ### 🐛 Fixed

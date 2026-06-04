@@ -9,10 +9,13 @@ if [[ -z "$PHONE_IP" ]]; then
     exit 1
 fi
 
+if ! command -v pebble >/dev/null 2>&1; then
+    echo "error: pebble CLI not found on PATH." >&2
+    echo "Install with: uv tool install pebble-tool && pebble sdk install latest" >&2
+    exit 1
+fi
+
+cd "$SCRIPT_DIR"
 echo "Building and installing on $PHONE_IP..."
-docker run --rm \
-    -v "$SCRIPT_DIR:/pebble" \
-    -w /pebble \
-    --network host \
-    rebble/pebble-sdk \
-    bash -c "pebble build && pebble install --phone $PHONE_IP"
+pebble build
+pebble install --phone "$PHONE_IP"
