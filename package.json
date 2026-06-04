@@ -1,7 +1,7 @@
 {
   "name": "fast-pebble",
   "author": "Grzegorz Lachowski",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "keywords": ["pebble-app", "fasting", "health", "timer"],
   "private": true,
   "dependencies": {},

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.0] — 2026-06-04
+
+### 🔧 Tooling
+
+- Version bump to ensure store submission picks up the updated SDK build
+
+---
+
 ## [1.5.0] — 2026-06-04
 
 ### 🔧 Tooling
