@@ -47,12 +47,12 @@ void test_omad_overtime_recorded(void);
 void test_elapsed_before_target(void);
 void test_elapsed_at_23h(void);
 
-// test_ring.c
-void test_empty_ring(void);
-void test_push_one(void);
-void test_push_three_chronological_order(void);
-void test_ring_wraps_at_capacity(void);
-void test_budget_under_4kb(void);
+// test_stats.c
+void test_stats_empty(void);
+void test_stats_one_record(void);
+void test_stats_accumulates(void);
+void test_stats_longest_tracked(void);
+void test_stats_reset_clears(void);
 
 // test_wakeup.c
 void test_wakeup_target_for_16h_fast(void);
@@ -96,11 +96,11 @@ int main(void) {
     RUN_TEST(test_elapsed_before_target);
     RUN_TEST(test_elapsed_at_23h);
 
-    RUN_TEST(test_empty_ring);
-    RUN_TEST(test_push_one);
-    RUN_TEST(test_push_three_chronological_order);
-    RUN_TEST(test_ring_wraps_at_capacity);
-    RUN_TEST(test_budget_under_4kb);
+    RUN_TEST(test_stats_empty);
+    RUN_TEST(test_stats_one_record);
+    RUN_TEST(test_stats_accumulates);
+    RUN_TEST(test_stats_longest_tracked);
+    RUN_TEST(test_stats_reset_clears);
 
     RUN_TEST(test_wakeup_target_for_16h_fast);
     RUN_TEST(test_cancel_on_state_change);

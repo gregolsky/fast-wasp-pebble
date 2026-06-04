@@ -3,6 +3,7 @@
 
 #include "fasting.h"
 #include "storage.h"
+#include "platform/persist.h"
 #include "platform/time.h"
 
 #include <stdio.h>
@@ -94,12 +95,7 @@ void stop_fast(void) {
     int32_t  target_sec   = (int32_t)target_hours * 3600;
     int32_t  overtime_sec = actual_sec > target_sec ? actual_sec - target_sec : 0;
 
-    HistoryEntry e = {
-        .started_at   = fast_started,
-        .duration_sec = actual_sec,
-        .overtime_sec = overtime_sec,
-    };
-    storage_push_fast_history(&e);
+    storage_record_fast(actual_sec, overtime_sec);
 
     storage_set_fast_started_at(0);
     storage_set_fast_target_hours(0);
@@ -135,12 +131,7 @@ void log_meal(void) {
         int32_t  actual_sec   = now - prev;
         int32_t  target_sec   = 23 * 3600;
         int32_t  overtime_sec = actual_sec > target_sec ? actual_sec - target_sec : 0;
-        HistoryEntry e = {
-            .started_at   = prev,
-            .duration_sec = actual_sec,
-            .overtime_sec = overtime_sec,
-        };
-        storage_push_fast_history(&e);
+        storage_record_fast(actual_sec, overtime_sec);
     }
 
     storage_set_omad_last_meal_at(now);
@@ -149,21 +140,11 @@ void log_meal(void) {
 // ── Stats ─────────────────────────────────────────────────────────────────────
 
 FastStats compute_fast_stats(void) {
-    FastStats stats = {0, 0, 0, 0};
-    uint8_t   count = 0;
-    uint64_t  total = 0;
-
-    static HistoryEntry buf[FAST_HISTORY_CAPACITY];
-    uint8_t n = storage_read_fast_history(buf, FAST_HISTORY_CAPACITY);
-
-    for (uint8_t i = 0; i < n; i++) {
-        stats.total_fasts++;
-        total += (uint32_t)buf[i].duration_sec;
-        stats.total_overtime_seconds += (uint32_t)buf[i].overtime_sec;
-        if ((uint32_t)buf[i].duration_sec > stats.longest_seconds)
-            stats.longest_seconds = (uint32_t)buf[i].duration_sec;
-        count++;
-    }
-    stats.avg_seconds = count > 0 ? (uint32_t)(total / count) : 0;
+    FastStats stats;
+    stats.total_fasts           = persist_exists(K_STATS_COUNT)        ? (uint32_t)persist_read_int(K_STATS_COUNT)        : 0;
+    uint32_t total_sec          = persist_exists(K_STATS_TOTAL_SEC)    ? (uint32_t)persist_read_int(K_STATS_TOTAL_SEC)    : 0;
+    stats.longest_seconds       = persist_exists(K_STATS_LONGEST_SEC)  ? (uint32_t)persist_read_int(K_STATS_LONGEST_SEC)  : 0;
+    stats.total_overtime_seconds= persist_exists(K_STATS_OVERTIME_SEC) ? (uint32_t)persist_read_int(K_STATS_OVERTIME_SEC) : 0;
+    stats.avg_seconds           = stats.total_fasts > 0 ? total_sec / stats.total_fasts : 0;
     return stats;
 }

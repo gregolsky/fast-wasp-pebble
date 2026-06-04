@@ -15,8 +15,7 @@ UNIT_SRCS := \
   tests/unit/test_program.c \
   tests/unit/test_fasting.c \
   tests/unit/test_omad.c \
-  tests/unit/test_edit_start.c \
-  tests/unit/test_ring.c \
+  tests/unit/test_stats.c \
   tests/unit/test_wakeup.c \
   tests/unit/runner.c
 

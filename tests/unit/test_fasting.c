@@ -70,12 +70,11 @@ void test_stop_fast_records_history(void) {
     g_now = T0 + 3600;
     stop_fast();
 
-    HistoryEntry buf[1];
-    uint8_t n = storage_read_fast_history(buf, 1);
-    TEST_ASSERT_EQUAL(1, n);
-    TEST_ASSERT_EQUAL_INT(T0,   buf[0].started_at);
-    TEST_ASSERT_EQUAL_INT(3600, buf[0].duration_sec);
-    TEST_ASSERT_EQUAL_INT(0,    buf[0].overtime_sec); // stopped before target
+    FastStats st = compute_fast_stats();
+    TEST_ASSERT_EQUAL_UINT32(1,    st.total_fasts);
+    TEST_ASSERT_EQUAL_UINT32(3600, st.avg_seconds);
+    TEST_ASSERT_EQUAL_UINT32(3600, st.longest_seconds);
+    TEST_ASSERT_EQUAL_UINT32(0,    st.total_overtime_seconds);
 }
 
 void test_stop_fast_records_overtime(void) {
@@ -83,9 +82,8 @@ void test_stop_fast_records_overtime(void) {
     g_now = T0 + 16 * 3600 + 900; // 15 min overtime
     stop_fast();
 
-    HistoryEntry buf[1];
-    storage_read_fast_history(buf, 1);
-    TEST_ASSERT_EQUAL_INT(900, buf[0].overtime_sec);
+    FastStats st = compute_fast_stats();
+    TEST_ASSERT_EQUAL_UINT32(900, st.total_overtime_seconds);
 }
 
 void test_stop_fast_opens_eating_window(void) {

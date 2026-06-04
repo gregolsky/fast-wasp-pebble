@@ -4,8 +4,6 @@
 #include "storage.h"
 #include "platform/persist.h"
 
-#include <string.h>
-
 // ── Scalar getters/setters ────────────────────────────────────────────────────
 
 uint8_t storage_get_program_id(void) {
@@ -48,56 +46,23 @@ int32_t storage_get_wakeup_id(void) {
 }
 void storage_set_wakeup_id(int32_t v) { persist_write_int(K_WAKEUP_ID, v); }
 
-// ── History ring ──────────────────────────────────────────────────────────────
+// ── Stats aggregate ───────────────────────────────────────────────────────────
 
-static void load_ring(HistoryRing *ring) {
-    int result = persist_read_data(K_FAST_HISTORY, ring, sizeof(HistoryRing));
-    if (result != (int)sizeof(HistoryRing)) {
-        memset(ring, 0, sizeof(HistoryRing));
-    }
-}
+void storage_record_fast(int32_t duration_sec, int32_t overtime_sec) {
+    int32_t count    = persist_exists(K_STATS_COUNT)       ? persist_read_int(K_STATS_COUNT)       : 0;
+    int32_t total    = persist_exists(K_STATS_TOTAL_SEC)   ? persist_read_int(K_STATS_TOTAL_SEC)   : 0;
+    int32_t longest  = persist_exists(K_STATS_LONGEST_SEC) ? persist_read_int(K_STATS_LONGEST_SEC) : 0;
+    int32_t overtime = persist_exists(K_STATS_OVERTIME_SEC)? persist_read_int(K_STATS_OVERTIME_SEC): 0;
 
-static void save_ring(const HistoryRing *ring) {
-    persist_write_data(K_FAST_HISTORY, ring, sizeof(HistoryRing));
-}
+    count++;
+    total    += duration_sec;
+    overtime += overtime_sec;
+    if (duration_sec > longest) longest = duration_sec;
 
-void storage_push_fast_history(const HistoryEntry *e) {
-    HistoryRing ring;
-    load_ring(&ring);
-
-    ring.entries[ring.head] = *e;
-    ring.head = (ring.head + 1) % FAST_HISTORY_CAPACITY;
-    if (ring.count < FAST_HISTORY_CAPACITY) ring.count++;
-
-    save_ring(&ring);
-
-#ifndef FAST_PEBBLE_HOST_BUILD
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "ring-count:%u ring-size:%d",
-            (unsigned)ring.count, persist_get_size(K_FAST_HISTORY));
-#endif
-}
-
-uint8_t storage_read_fast_history(HistoryEntry *out, uint8_t max_count) {
-    HistoryRing ring;
-    load_ring(&ring);
-
-    uint8_t n = ring.count < max_count ? ring.count : max_count;
-    // head points to the slot that will be written next (= oldest if full, else unused).
-    // chronological start = (head - count + CAPACITY) % CAPACITY when full,
-    // or simply 0..count-1 when not full.
-    uint8_t start = ring.count < FAST_HISTORY_CAPACITY
-                    ? 0
-                    : ring.head; // head is oldest when ring is full
-
-    for (uint8_t i = 0; i < n; i++) {
-        uint8_t idx = (start + i) % FAST_HISTORY_CAPACITY;
-        out[i] = ring.entries[idx];
-    }
-    return n;
-}
-
-int storage_history_bytes(void) {
-    return persist_get_size(K_FAST_HISTORY);
+    persist_write_int(K_STATS_COUNT,        count);
+    persist_write_int(K_STATS_TOTAL_SEC,    total);
+    persist_write_int(K_STATS_LONGEST_SEC,  longest);
+    persist_write_int(K_STATS_OVERTIME_SEC, overtime);
 }
 
 // ── Reset ─────────────────────────────────────────────────────────────────────
@@ -109,7 +74,10 @@ void storage_reset_all(void) {
     persist_delete(K_EAT_STARTED_AT);
     persist_delete(K_EAT_TARGET_HOURS);
     persist_delete(K_OMAD_LAST_MEAL_AT);
-    persist_delete(K_FAST_HISTORY);
     persist_delete(K_VIBRATION_ON);
     persist_delete(K_WAKEUP_ID);
+    persist_delete(K_STATS_COUNT);
+    persist_delete(K_STATS_TOTAL_SEC);
+    persist_delete(K_STATS_LONGEST_SEC);
+    persist_delete(K_STATS_OVERTIME_SEC);
 }

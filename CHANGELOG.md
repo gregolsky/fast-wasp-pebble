@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0] — 2026-06-04
+
+### 🐛 Fixed
+- Stats no longer reset after every stop/start — the 64-entry history ring (770 bytes) silently failed Pebble's 256-byte per-key persist limit on every write. Replaced with four scalar aggregate counters (16 bytes total) that persist correctly.
+
+---
+
 ## [1.3.0] — 2026-06-01
 
 ### 🐛 Fixed

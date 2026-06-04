@@ -18,9 +18,8 @@ void test_first_meal_sets_last_meal_at(void) {
 void test_first_meal_no_history(void) {
     g_now = T0;
     log_meal();
-    HistoryEntry buf[1];
-    uint8_t n = storage_read_fast_history(buf, 1);
-    TEST_ASSERT_EQUAL(0, n);
+    FastStats st = compute_fast_stats();
+    TEST_ASSERT_EQUAL_UINT32(0, st.total_fasts);
 }
 
 void test_second_meal_closes_previous_interval(void) {
@@ -29,12 +28,10 @@ void test_second_meal_closes_previous_interval(void) {
     g_now = T0 + 23 * 3600;
     log_meal();
 
-    HistoryEntry buf[1];
-    uint8_t n = storage_read_fast_history(buf, 1);
-    TEST_ASSERT_EQUAL(1, n);
-    TEST_ASSERT_EQUAL_INT(T0,        buf[0].started_at);
-    TEST_ASSERT_EQUAL_INT(23 * 3600, buf[0].duration_sec);
-    TEST_ASSERT_EQUAL_INT(0,         buf[0].overtime_sec);
+    FastStats st = compute_fast_stats();
+    TEST_ASSERT_EQUAL_UINT32(1,          st.total_fasts);
+    TEST_ASSERT_EQUAL_UINT32(23 * 3600,  st.avg_seconds);
+    TEST_ASSERT_EQUAL_UINT32(0,          st.total_overtime_seconds);
 }
 
 void test_second_meal_updates_last_meal_at(void) {
@@ -51,9 +48,8 @@ void test_omad_overtime_recorded(void) {
     g_now = T0 + 24 * 3600;
     log_meal();
 
-    HistoryEntry buf[1];
-    storage_read_fast_history(buf, 1);
-    TEST_ASSERT_EQUAL_INT(3600, buf[0].overtime_sec);
+    FastStats st = compute_fast_stats();
+    TEST_ASSERT_EQUAL_UINT32(3600, st.total_overtime_seconds);
 }
 
 void test_elapsed_before_target(void) {
