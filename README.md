@@ -22,7 +22,7 @@ A glanceable, native intermittent-fasting tracker for the new Pebble devices fro
 
 | Programs | Active fast |
 |----------|-------------|
-| ![Program picker](screenshots/screenshot-programs.png) | ![Active fast](screenshots/screenshot-fast.png) |
+| ![Program picker](screenshots/emery/01_picker.png) | ![Active fast](screenshots/emery/03_active_fast.png) |
 
 ---
 

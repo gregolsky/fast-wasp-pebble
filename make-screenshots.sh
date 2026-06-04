@@ -69,3 +69,7 @@ echo ''
 echo \"Screenshots saved to \$OUT_DIR/\"
 ls -lh \"\$OUT_DIR/\"
 "
+
+for f in "$SCRIPT_DIR/screenshots/$PLATFORM"/*.png; do
+    convert "$f" -background black -alpha remove -alpha off -define png:color-type=2 "$f"
+done
