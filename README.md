@@ -67,6 +67,14 @@ To deploy directly to a phone-connected watch:
 
 ---
 
+## 🧪 Testing
+
+Unit tests run natively with `make test` (no SDK needed).
+
+E2e tests live in `tests/e2e/` and run via `./run-e2e.sh`. They require the local `pebble-tool` install (`uv tool install pebble-tool`). Currently failing due to a pebble-tool v5 incompatibility: the `--emulator` flag was removed from `pebble wipe`, causing the fixture to hang at `state-ready`.
+
+---
+
 ## 📖 Docs
 
 - [SPECS.md](SPECS.md) — full functional specification

@@ -9,8 +9,7 @@ def test_stop_early_appears_in_stats(pebble):
     pebble.press("select")   # stop fast early
     time.sleep(0.5)
 
-    # Open Stats via long-press Down.
-    pebble.press("down", hold=True)
+    pebble.press("up")   # open Stats
     time.sleep(0.5)
 
     assert pebble.wait_for_log("stats-total-fasts:1"), \

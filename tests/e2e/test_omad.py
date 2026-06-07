@@ -20,8 +20,7 @@ def test_omad_log_meal(pebble):
     pebble.press("select")   # log second meal (closes first interval)
     time.sleep(0.5)
 
-    # Stats should show 1 completed OMAD interval.
-    pebble.press("down", hold=True)
+    pebble.press("up")   # open Stats
     time.sleep(0.5)
     assert pebble.wait_for_log("stats-total-fasts:1"), \
         "Expected 1 OMAD interval in stats"

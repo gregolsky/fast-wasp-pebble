@@ -53,7 +53,6 @@ First public release.
 - **OVERTIME counter** — holds state past target and counts up until you explicitly stop
 - OMAD mode with elapsed time and thin progress bar toward 23-hour target
 - In-app and wakeup-relaunch **notifications** — vibration + banner when fast or eating window target is reached
-- Edit-start-time screen — nudge fast start by ±15 minutes
 - Stats screen — total fasts, average length, longest fast, total overtime
 - Settings — vibration toggle, two-step data reset, about
 - Program Picker with scrollable list of presets

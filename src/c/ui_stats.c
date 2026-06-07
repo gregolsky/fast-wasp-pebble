@@ -21,6 +21,7 @@ static void build_body(void) {
     fast_format_hms((int32_t)st.longest_seconds,        longest_buf);
     fast_format_hms((int32_t)st.total_overtime_seconds, overtime_buf);
 
+    APP_LOG(APP_LOG_LEVEL_INFO, "stats-total-fasts:%lu", (unsigned long)st.total_fasts);
     snprintf(s_body_buf, sizeof(s_body_buf),
              "Fasts: %lu\nAvg:   %s\nLongest:\n  %s\nOvertime:\n  %s",
              (unsigned long)st.total_fasts,

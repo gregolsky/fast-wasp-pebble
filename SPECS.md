@@ -53,8 +53,8 @@ On first launch (no saved program), the app opens directly on the **Program Pick
 |--------|-----------------|
 | **Main** (Ready / Active fast / Eating window / OMAD) | App launch; auto-routed by state |
 | **Program Picker** | From Ready state: long-press Select |
-| **Stats** | From any Main state: long-press Down |
-| **Settings** | From Program Picker: long-press Select |
+| **Stats** | From any Main state: short-press Up |
+| **Settings** | From Program Picker: select the "Settings" row |
 
 Back button always pops the window stack. From Main, Back exits the app (standard Pebble behaviour).
 
@@ -101,7 +101,7 @@ Screen redraws every 1 s. A wakeup is scheduled at `startedAt + targetHours×360
 
 Buttons:
 - **Select (short)** — stop the fast; records it in history; opens Eating Window (or Ready if no eating window).
-- **Up (short)** — open Edit-Start-Time screen (§7.4).
+- **Up (short)** — open Stats.
 - **Back** — exit app (wakeup remains scheduled; fast continues in background).
 
 ### 7.3 Eating Window Timer
@@ -110,25 +110,12 @@ Same ring + countdown, now counting down to the end of the eating window.
 
 Buttons:
 - **Select (short)** — "Start Fasting Now": closes the window early, immediately begins a new fast.
-- **Select (long)** — "End Eating Window": closes the window without starting a fast, returns to Ready.
+- **Select (long)** — open Program Picker.
+- **Up (short)** — open Stats.
 
 Wakeup fires at end of window: double-pulse vibration, modal "⏱ Eating window closed."
 
-### 7.4 Editing the Start Time
-
-A **±15-minute nudge** screen (no full keyboard):
-
-- Header: current effective start time, e.g. `Started 14:23`.
-- Big number: offset in minutes (default 0).
-- **Up / Down** — adjust by 15 minutes.
-- **Select** — commit.
-- **Back** — cancel.
-
-Validation:
-- Result **cannot be in the future** — shows "Too late", refuses commit.
-- Result **cannot be more than 14 days in the past** — shows "Too old", refuses commit.
-
-### 7.5 OMAD View
+### 7.4 OMAD View
 
 When the OMAD program is active:
 
@@ -158,7 +145,7 @@ Reached via long-press Down from any Main state. Scrollable list:
 
 ## 9. Settings
 
-Reached via long-press Select from the Program Picker.
+Reached by selecting the "Settings" row in the Program Picker.
 
 | Setting | Behaviour |
 |---------|-----------|
@@ -180,11 +167,14 @@ All data in Pebble persistent storage (`persist_*`). Time values are 32-bit Unix
 | `K_EAT_STARTED_AT` | int32 | Epoch seconds; 0 = no active eating window |
 | `K_EAT_TARGET_HOURS` | uint8 | Snapshot at start |
 | `K_OMAD_LAST_MEAL_AT` | int32 | Epoch seconds; 0 = no OMAD interval open |
-| `K_FAST_HISTORY` | byte array | Ring buffer: 64 entries × 8 B = 512 B |
 | `K_VIBRATION_ON` | uint8 | 1 = on (default), 0 = off |
 | `K_WAKEUP_ID` | int32 | Active wakeup id for cancellation |
+| `K_STATS_COUNT` | int32 | Total completed fasts |
+| `K_STATS_TOTAL_SEC` | int32 | Sum of all fast durations (seconds) |
+| `K_STATS_LONGEST_SEC` | int32 | Longest fast duration (seconds) |
+| `K_STATS_OVERTIME_SEC` | int32 | Cumulative overtime (seconds) |
 
-Fast-history ring buffer wraps at 64 entries (oldest silently evicted). Total budget stays well under 4 KB.
+Stats are stored as four scalar aggregates (no ring buffer). Total budget is well under 4 KB.
 
 ---
 

@@ -2,7 +2,7 @@
 import subprocess, time, threading, queue, os, glob, pytest
 
 PLATFORM     = "basalt"
-SDK_PY       = "/opt/pebble-sdk-4.5-linux64/.env/bin/python"
+SDK_PY       = os.path.expanduser("~/.local/share/uv/tools/pebble-tool/bin/python3")
 DRIVER       = os.path.join(os.path.dirname(__file__), "driver.py")
 ARTIFACT_DIR = os.path.join(os.path.dirname(__file__), "_artifacts")
 

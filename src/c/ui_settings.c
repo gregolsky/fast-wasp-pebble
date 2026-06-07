@@ -27,7 +27,7 @@ static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *idx, voi
     switch (idx->row) {
         case ROW_VIBRATION: {
             char sub[16];
-            snprintf(sub, sizeof(sub), storage_get_vibration_on() ? "On" : "Off");
+            snprintf(sub, sizeof(sub), "%s", storage_get_vibration_on() ? "On" : "Off");
             menu_cell_basic_draw(ctx, cell_layer, "Vibration", sub, NULL);
             break;
         }
@@ -38,7 +38,7 @@ static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *idx, voi
                                  NULL);
             break;
         case ROW_ABOUT:
-            menu_cell_basic_draw(ctx, cell_layer, "About", "Fast Pebble v1.0", NULL);
+            menu_cell_basic_draw(ctx, cell_layer, "About", "Fast Pebble v1.6.0", NULL);
             break;
     }
 }

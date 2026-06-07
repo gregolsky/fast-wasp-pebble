@@ -113,7 +113,79 @@ void test_stop_fast_no_eat_window_for_omad(void) {
     TEST_ASSERT_EQUAL_INT(0, storage_get_eat_started_at());
 }
 
-// ── Format ────────────────────────────────────────────────────────────────────
+// ── Eating window helpers ──────────────────────────────────────────────────────
+
+void test_eating_window_restart_fast(void) {
+    // Set up: fast done, eating window open for program 2 (16:8).
+    storage_set_program_id(2);
+    storage_set_eat_started_at(T0);
+    storage_set_eat_target_hours(8);
+
+    g_now = T0 + 1000;
+    eating_window_restart_fast();
+
+    // Eating window must be cleared.
+    TEST_ASSERT_EQUAL_INT(0, storage_get_eat_started_at());
+    TEST_ASSERT_EQUAL_INT(0, storage_get_eat_target_hours());
+    // New fast must have started.
+    TEST_ASSERT_EQUAL_INT(g_now, storage_get_fast_started_at());
+    TEST_ASSERT_EQUAL_INT(16,    storage_get_fast_target_hours());
+}
+
+void test_eating_window_end(void) {
+    storage_set_program_id(2);
+    storage_set_eat_started_at(T0);
+    storage_set_eat_target_hours(8);
+
+    g_now = T0 + 1000;
+    eating_window_end();
+
+    TEST_ASSERT_EQUAL_INT(0, storage_get_eat_started_at());
+    TEST_ASSERT_EQUAL_INT(0, storage_get_eat_target_hours());
+    // Must NOT have started a fast.
+    TEST_ASSERT_EQUAL_INT(0, storage_get_fast_started_at());
+}
+
+void test_start_fast_clamps_out_of_range(void) {
+    start_fast(99); // out-of-range -> program_by_index returns PROGRAMS[0] (12:12)
+    TEST_ASSERT_EQUAL_INT(12, storage_get_fast_target_hours());
+}
+
+// ── Format hm ─────────────────────────────────────────────────────────────────
+
+void test_format_hm_zero(void) {
+    char buf[8];
+    fast_format_hm(0, buf);
+    TEST_ASSERT_EQUAL_STRING("00:00", buf);
+}
+
+void test_format_hm_negative(void) {
+    char buf[8];
+    fast_format_hm(-5400, buf); // abs = 5400 = 1h 30m
+    TEST_ASSERT_EQUAL_STRING("01:30", buf);
+}
+
+void test_format_hm_large(void) {
+    char buf[8];
+    fast_format_hm(23 * 3600, buf);
+    TEST_ASSERT_EQUAL_STRING("23:00", buf);
+}
+
+// ── Storage defaults ──────────────────────────────────────────────────────────
+
+void test_storage_program_id_default(void) {
+    TEST_ASSERT_EQUAL_INT(0xFF, storage_get_program_id());
+}
+
+void test_storage_wakeup_id_default(void) {
+    TEST_ASSERT_EQUAL_INT(-1, storage_get_wakeup_id());
+}
+
+void test_storage_vibration_default(void) {
+    TEST_ASSERT_TRUE(storage_get_vibration_on());
+}
+
+// ── Format hms ────────────────────────────────────────────────────────────────
 
 void test_format_hms_zero(void) {
     char buf[9];

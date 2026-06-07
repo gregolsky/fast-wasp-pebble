@@ -1,12 +1,6 @@
-#!/usr/bin/env python
-"""Button press driver (Python 2) -- run via SDK python, not system python."""
-from __future__ import print_function
+#!/usr/bin/env python3
+"""Button press driver -- run via pebble-tool's Python."""
 import sys, time, argparse
-
-SDK_ENV  = '/opt/pebble-sdk-4.5-linux64/.env/lib/python2.7/site-packages'
-SDK_TOOL = '/opt/pebble-sdk-4.5-linux64/pebble-tool'
-sys.path.insert(0, SDK_ENV)
-sys.path.insert(0, SDK_TOOL)
 
 from pebble_tool.sdk.emulator import ManagedEmulatorTransport
 from libpebble2.communication.transports.qemu.protocol import QemuButton

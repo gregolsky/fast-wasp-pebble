@@ -14,11 +14,15 @@ static void     (*s_on_select)(uint8_t);
 
 static uint16_t get_num_rows(MenuLayer *ml, uint16_t section, void *ctx) {
     (void)ml; (void)section; (void)ctx;
-    return NUM_PROGRAMS;
+    return NUM_PROGRAMS + 1;
 }
 
 static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *idx, void *context) {
     (void)context;
+    if (idx->row == NUM_PROGRAMS) {
+        menu_cell_basic_draw(ctx, cell_layer, "Settings", NULL, NULL);
+        return;
+    }
     const Program *p = program_by_index((uint8_t)idx->row);
     char buf[32];
     if (p->sub[0]) {
@@ -31,13 +35,12 @@ static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *idx, voi
 
 static void on_select_click(MenuLayer *ml, MenuIndex *idx, void *ctx) {
     (void)ml; (void)ctx;
+    if (idx->row == NUM_PROGRAMS) {
+        ui_settings_push();
+        return;
+    }
     window_stack_pop(true);
     if (s_on_select) s_on_select((uint8_t)idx->row);
-}
-
-static void on_long_select(ClickRecognizerRef r, void *ctx) {
-    (void)r; (void)ctx;
-    ui_settings_push();
 }
 
 static void click_up(ClickRecognizerRef r, void *ctx) {
@@ -61,7 +64,6 @@ static void click_config(void *ctx) {
     window_single_click_subscribe(BUTTON_ID_UP,     click_up);
     window_single_click_subscribe(BUTTON_ID_DOWN,   click_down);
     window_single_click_subscribe(BUTTON_ID_SELECT, click_select);
-    window_long_click_subscribe(BUTTON_ID_SELECT, 700, on_long_select, NULL);
 }
 
 static void window_load(Window *win) {
