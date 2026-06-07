@@ -50,5 +50,8 @@ void     storage_set_wakeup_id(int32_t v);
 // Fold one completed fast into the persisted aggregates.
 void storage_record_fast(int32_t duration_sec, int32_t overtime_sec);
 
+// Wipe stats only (count, avg, longest, overtime).
+void storage_reset_stats(void);
+
 // Wipe everything.
 void storage_reset_all(void);

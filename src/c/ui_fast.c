@@ -4,6 +4,7 @@
 #include "ui_fast.h"
 #include "ui_picker.h"
 #include "ui_stats.h"
+#include "ui_settings.h"
 #include "fasting.h"
 #include "storage.h"
 #include "notify.h"
@@ -319,11 +320,17 @@ static void click_up_short(ClickRecognizerRef r, void *ctx) {
     ui_stats_push();
 }
 
+static void click_down_short(ClickRecognizerRef r, void *ctx) {
+    (void)r; (void)ctx;
+    ui_settings_push();
+}
+
 static void click_config(void *ctx) {
     (void)ctx;
     window_single_click_subscribe(BUTTON_ID_SELECT, click_select_short);
     window_long_click_subscribe(BUTTON_ID_SELECT, 700, click_select_long, NULL);
     window_single_click_subscribe(BUTTON_ID_UP, click_up_short);
+    window_single_click_subscribe(BUTTON_ID_DOWN, click_down_short);
 }
 
 // ── Window lifecycle ──────────────────────────────────────────────────────────

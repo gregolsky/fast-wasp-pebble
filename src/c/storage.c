@@ -67,6 +67,13 @@ void storage_record_fast(int32_t duration_sec, int32_t overtime_sec) {
 
 // ── Reset ─────────────────────────────────────────────────────────────────────
 
+void storage_reset_stats(void) {
+    persist_delete(K_STATS_COUNT);
+    persist_delete(K_STATS_TOTAL_SEC);
+    persist_delete(K_STATS_LONGEST_SEC);
+    persist_delete(K_STATS_OVERTIME_SEC);
+}
+
 void storage_reset_all(void) {
     persist_delete(K_PROGRAM_ID);
     persist_delete(K_FAST_STARTED_AT);
