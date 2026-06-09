@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.8.0] — 2026-06-10
+
+### 🐛 Fixed
+- **OMAD**: pressing SELECT in the Ready state now correctly logs the first meal and enters active OMAD tracking
+
+### ✨ Changed
+- **Settings shortcut**: pressing DOWN on the main fast screen opens Settings directly
+- **Reset/Cancel dialog**: pressing SELECT on the Stats screen shows a confirmation dialog for cancel or full data reset
+
+---
+
+## [1.7.0] — 2026-06-07
+
+### ✨ Changed
+- **Settings row**: Program Picker now has a visible Settings row at the bottom (replaces the hidden long-press-SELECT gesture)
+
+### 🔧 Tooling
+- 48 unit tests (up from 38); added eating-window, format-hm, and storage-defaults coverage
+- E2E harness ported off Docker to local `pebble-tool` install
+
+---
+
 ## [1.6.0] — 2026-06-04
 
 ### 🔧 Tooling
