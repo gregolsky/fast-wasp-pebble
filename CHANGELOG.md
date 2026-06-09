@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.0] — 2026-06-10
+
+### 🔧 Tooling
+- **Version auto-injection**: `src/c/version.h` generated from `package.json` at build time — Settings → About now always shows the correct version without manual updates
+- E2E test asserts startup log matches `package.json` version
+
+---
+
 ## [1.8.0] — 2026-06-10
 
 ### 🐛 Fixed
