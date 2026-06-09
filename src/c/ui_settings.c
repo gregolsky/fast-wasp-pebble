@@ -63,6 +63,7 @@ static void on_select(MenuLayer *ml, MenuIndex *idx, void *ctx) {
             }
             break;
         case ROW_ABOUT:
+            APP_LOG(APP_LOG_LEVEL_INFO, "settings-about");
             break;
     }
 }
