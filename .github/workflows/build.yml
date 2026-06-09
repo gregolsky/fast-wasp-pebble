@@ -15,25 +15,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v3
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      - name: Cache Pebble SDK
-        uses: actions/cache@v4
-        with:
-          path: ~/.pebble-sdk
-          key: pebble-sdk-${{ runner.os }}-latest
-
-      - name: Install pebble-tool + SDK
-        run: |
-          uv tool install pebble-tool --python 3.13
-          pebble sdk install latest
-
       - name: Build pbw
-        run: pebble build
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/pebble \
+            -w /pebble \
+            gregolsky/pebble-sdk:pebble-tool-5.0.37-sdk-4.9.169 \
+            pebble build
 
       - name: Verify artifact
         run: ls -la build/*.pbw
