@@ -16,13 +16,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build pbw
-        run: |
-          docker run --rm \
-            --user root \
-            -v ${{ github.workspace }}:/pebble \
-            -w /pebble \
-            gregolsky/pebble-sdk:pebble-tool-5.0.37-sdk-4.9.169 \
-            pebble build
+        run: make build DOCKER_FLAGS="--user root"
 
       - name: Verify artifact
         run: ls -la build/*.pbw

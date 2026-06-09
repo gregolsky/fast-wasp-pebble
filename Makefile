@@ -36,8 +36,10 @@ $(UNIT_BIN): $(UNIT_SRCS)
 	@mkdir -p tests/unit/build
 	$(CC) $(CFLAGS) -o $@ $(UNIT_SRCS)
 
+DOCKER_FLAGS ?=
+
 build: src/c/version.h
-	docker run --rm -v "$(CURDIR):/pebble" -w /pebble $(PEBBLE_IMAGE) pebble build
+	docker run --rm $(DOCKER_FLAGS) -v "$(CURDIR):/pebble" -w /pebble $(PEBBLE_IMAGE) pebble build
 
 e2e:
 	./run-e2e.sh
