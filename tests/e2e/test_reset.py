@@ -4,10 +4,8 @@ import time
 
 
 def _open_settings(pebble):
-    # From Ready: long-press Select -> Program Picker, then long-press Select -> Settings.
-    pebble.press("select", hold=True)
-    time.sleep(0.5)
-    pebble.press("select", hold=True)
+    # From Ready: press DOWN to open Settings directly.
+    pebble.press("down")
     time.sleep(0.5)
 
 

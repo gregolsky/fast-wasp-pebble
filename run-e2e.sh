@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+IMAGE="gregolsky/pebble-sdk:pebble-tool-5.0.37-sdk-4.9.169"
 
-export PATH="$HOME/.local/bin:$HOME/.local/share/uv/tools/pebble-tool/bin:$PATH"
-export SDL_VIDEODRIVER=dummy
-
-cd "$SCRIPT_DIR"
-pebble build
-
-pip3 install pytest --quiet
-python3 -m pytest tests/e2e/ -v --platform=basalt "$@"
+docker run --rm \
+    -v "$SCRIPT_DIR:/pebble" \
+    -w /pebble \
+    -e SDL_VIDEODRIVER=dummy \
+    -e SDL_AUDIODRIVER=dummy \
+    "$IMAGE" \
+    bash -c 'pebble build && uv pip install --python "$(which python3)" pytest --quiet && python3 -m pytest tests/e2e/ -v --platform=basalt "$@"' \
+    -- "$@"

@@ -13,9 +13,9 @@ def _switch_to_omad(pebble):
 
 def test_omad_log_meal(pebble):
     _switch_to_omad(pebble)
-    assert pebble.wait_for_log("omad-active"), "Expected OMAD state"
-
-    pebble.press("select")   # log first meal
+    pebble.press("select")   # log first meal → enters OMAD active
+    time.sleep(0.3)
+    assert pebble.wait_for_log("omad-active"), "Expected OMAD state after first meal"
     time.sleep(0.3)
     pebble.press("select")   # log second meal (closes first interval)
     time.sleep(0.5)

@@ -10,4 +10,4 @@ def test_first_launch_shows_picker(pebble_raw):
     pebble_raw.press("down")
     pebble_raw.press("select")
     time.sleep(0.5)
-    assert pebble_raw.wait_for_log("program-selected"), "Expected program-selected log"
+    assert pebble_raw.wait_for_log("state-ready"), "Expected state-ready after program selection"

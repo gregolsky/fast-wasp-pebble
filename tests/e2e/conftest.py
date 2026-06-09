@@ -1,8 +1,10 @@
 """E2E fixture for Fast Pebble. Run inside Docker: see run-e2e.sh."""
-import subprocess, time, threading, queue, os, glob, pytest
+import subprocess, time, threading, queue, os, glob, shutil, pytest
 
 PLATFORM     = "basalt"
-SDK_PY       = os.path.expanduser("~/.local/share/uv/tools/pebble-tool/bin/python3")
+_pebble_bin  = shutil.which("pebble")
+SDK_PY       = (os.path.join(os.path.dirname(_pebble_bin), "python3")
+                if _pebble_bin else "python3")
 DRIVER       = os.path.join(os.path.dirname(__file__), "driver.py")
 ARTIFACT_DIR = os.path.join(os.path.dirname(__file__), "_artifacts")
 
@@ -36,10 +38,10 @@ class PebbleEmulator:
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
     def start(self):
-        subprocess.run(["pebble", "wipe", "--emulator", self.platform],
-                       capture_output=True)
+        subprocess.run(["pebble", "kill"], capture_output=True)
         subprocess.run(["pebble", "install", "--emulator", self.platform,
                         _find_pbw()], check=True, capture_output=True)
+        subprocess.run(["pebble", "wipe"], capture_output=True)
         time.sleep(3)
         self._start_logs()
 

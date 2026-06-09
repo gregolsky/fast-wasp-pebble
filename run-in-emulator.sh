@@ -19,5 +19,5 @@ docker run --rm \
     -w /pebble \
     -e DISPLAY="${DISPLAY:-:0}" \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
-    rebble/pebble-sdk \
+    gregolsky/pebble-sdk:pebble-tool-5.0.37-sdk-4.9.169 \
     bash -c "pebble build && pebble install --emulator $PLATFORM --logs"

@@ -265,11 +265,15 @@ static void click_select_short(ClickRecognizerRef r, void *ctx) {
     switch (s_state) {
         case FAST_STATE_READY:
             if (storage_get_program_id() != 0xFF) {
-                start_fast(storage_get_program_id());
-                s_fast_complete_fired = false;
-                int32_t st = storage_get_fast_started_at();
-                uint8_t th = storage_get_fast_target_hours();
-                notify_schedule(NOTIFY_FAST_COMPLETE, st + (int32_t)th * 3600);
+                if (p->is_omad) {
+                    log_meal();
+                } else {
+                    start_fast(storage_get_program_id());
+                    s_fast_complete_fired = false;
+                    int32_t st = storage_get_fast_started_at();
+                    uint8_t th = storage_get_fast_target_hours();
+                    notify_schedule(NOTIFY_FAST_COMPLETE, st + (int32_t)th * 3600);
+                }
                 vibes_short_pulse();
             }
             break;

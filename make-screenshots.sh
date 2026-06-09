@@ -28,12 +28,12 @@ docker run --rm \
     -w /pebble \
     -e SDL_VIDEODRIVER=dummy \
     -e SDL_AUDIODRIVER=dummy \
-    rebble/pebble-sdk \
+    gregolsky/pebble-sdk:pebble-tool-5.0.37-sdk-4.9.169 \
     bash -c "
 set -e
 EMU_PLATFORM=basalt
 OUT_DIR=screenshots/$PLATFORM
-SDK_PY=/opt/pebble-sdk-4.5-linux64/.env/bin/python
+SDK_PY=$(dirname $(which pebble))/python3
 DRIVER=tests/e2e/driver.py
 
 btn() { \$SDK_PY \$DRIVER \$EMU_PLATFORM \"\$1\" \${2:+--hold-ms \"\$2\"}; sleep 0.5; }

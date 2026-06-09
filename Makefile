@@ -1,3 +1,5 @@
+PEBBLE_IMAGE := gregolsky/pebble-sdk:pebble-tool-5.0.37-sdk-4.9.169
+
 CC      := gcc
 CFLAGS  := -std=c11 -Wall -Wextra -Wpedantic -g \
            -Isrc/c \
@@ -31,7 +33,7 @@ $(UNIT_BIN): $(UNIT_SRCS)
 	$(CC) $(CFLAGS) -o $@ $(UNIT_SRCS)
 
 build:
-	pebble build
+	docker run --rm -v "$(CURDIR):/pebble" -w /pebble $(PEBBLE_IMAGE) pebble build
 
 e2e:
 	./run-e2e.sh
