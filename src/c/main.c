@@ -3,6 +3,7 @@
 
 #include <pebble.h>
 
+#include "version.h"
 #include "storage.h"
 #include "notify.h"
 #include "ui_fast.h"
@@ -30,6 +31,7 @@ static void on_first_program_selected(uint8_t idx) {
 }
 
 static void app_init(void) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "app-version:" APP_VERSION);
     handle_wakeup_on_launch();
 
     if (storage_get_program_id() == 0xFF) {

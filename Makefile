@@ -1,4 +1,5 @@
 PEBBLE_IMAGE := gregolsky/pebble-sdk:pebble-tool-5.0.37-sdk-4.9.169
+VERSION      := $(shell python3 -c "import json; print(json.load(open('package.json'))['version'])")
 
 CC      := gcc
 CFLAGS  := -std=c11 -Wall -Wextra -Wpedantic -g \
@@ -25,18 +26,21 @@ UNIT_BIN := tests/unit/build/run_tests
 
 .PHONY: test build clean e2e
 
-test: $(UNIT_BIN)
+src/c/version.h: package.json
+	echo '#define APP_VERSION "$(VERSION)"' > src/c/version.h
+
+test: src/c/version.h $(UNIT_BIN)
 	$(UNIT_BIN)
 
 $(UNIT_BIN): $(UNIT_SRCS)
 	@mkdir -p tests/unit/build
 	$(CC) $(CFLAGS) -o $@ $(UNIT_SRCS)
 
-build:
+build: src/c/version.h
 	docker run --rm -v "$(CURDIR):/pebble" -w /pebble $(PEBBLE_IMAGE) pebble build
 
 e2e:
 	./run-e2e.sh
 
 clean:
-	rm -rf tests/unit/build build
+	rm -rf tests/unit/build build src/c/version.h

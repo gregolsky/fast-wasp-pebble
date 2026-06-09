@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ui_settings.h"
+#include "version.h"
 #include "storage.h"
 #include "notify.h"
 
@@ -38,7 +39,7 @@ static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *idx, voi
                                  NULL);
             break;
         case ROW_ABOUT:
-            menu_cell_basic_draw(ctx, cell_layer, "About", "Fast Pebble v1.6.0", NULL);
+            menu_cell_basic_draw(ctx, cell_layer, "About", "Fast Pebble v" APP_VERSION, NULL);
             break;
     }
 }

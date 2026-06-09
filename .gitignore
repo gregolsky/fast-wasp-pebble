@@ -17,6 +17,7 @@ npm-debug.log*
 
 # Host-build artefacts
 tests/unit/build/
+src/c/version.h
 
 # Editor / OS junk
 .vscode/
