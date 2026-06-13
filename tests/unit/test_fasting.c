@@ -151,6 +151,68 @@ void test_start_fast_clamps_out_of_range(void) {
     TEST_ASSERT_EQUAL_INT(12, storage_get_fast_target_hours());
 }
 
+// ── Eating window: overtime boundary ─────────────────────────────────────────
+// Helpers: open an eating window by starting a 16:8 fast then stopping it.
+
+static int32_t _open_eating_window(void) {
+    start_fast(2);               // 16:8: fast_hours=16, eat_hours=8
+    g_now = T0 + 3600;
+    stop_fast();                 // eat_started_at = T0+3600, eat_target_hours=8
+    return storage_get_eat_started_at();
+}
+
+void test_eating_window_remaining_at_start(void) {
+    int32_t eat_started = _open_eating_window();
+    // right after opening, full eat window remains
+    TEST_ASSERT_EQUAL_INT(8 * 3600,
+        fast_remaining(eat_started, storage_get_eat_target_hours()));
+}
+
+void test_eating_window_remaining_one_before_target(void) {
+    int32_t eat_started = _open_eating_window();
+    g_now = eat_started + 8 * 3600 - 1;
+    TEST_ASSERT_EQUAL_INT(1,
+        fast_remaining(eat_started, storage_get_eat_target_hours()));
+}
+
+void test_eating_window_remaining_at_target(void) {
+    int32_t eat_started = _open_eating_window();
+    g_now = eat_started + 8 * 3600;
+    TEST_ASSERT_EQUAL_INT(0,
+        fast_remaining(eat_started, storage_get_eat_target_hours()));
+    TEST_ASSERT_FALSE(fast_is_overtime(eat_started, storage_get_eat_target_hours()));
+}
+
+void test_eating_window_overtime_one_second_past(void) {
+    int32_t eat_started = _open_eating_window();
+    g_now = eat_started + 8 * 3600 + 1;
+    TEST_ASSERT_EQUAL_INT(-1,
+        fast_remaining(eat_started, storage_get_eat_target_hours()));
+    TEST_ASSERT_TRUE(fast_is_overtime(eat_started, storage_get_eat_target_hours()));
+}
+
+void test_eating_window_overtime_one_minute_past(void) {
+    int32_t eat_started = _open_eating_window();
+    g_now = eat_started + 8 * 3600 + 60;
+    int32_t rem = fast_remaining(eat_started, storage_get_eat_target_hours());
+    TEST_ASSERT_EQUAL_INT(-60, rem);
+    TEST_ASSERT_TRUE(fast_is_overtime(eat_started, storage_get_eat_target_hours()));
+    // fast_format_hm shows |rem| rounded down to minutes, so "00:01" at -60s
+    char buf[8];
+    fast_format_hm(rem, buf);
+    TEST_ASSERT_EQUAL_STRING("00:01", buf);
+}
+
+void test_eating_window_target_hours_zero_is_safe(void) {
+    // Simulate stale/corrupt persist: eat window open but target stored as 0.
+    storage_set_eat_started_at(T0);
+    storage_set_eat_target_hours(0);
+    g_now = T0 + 3600;
+    // Math layer: fast_remaining(T0, 0) = 0 - 3600 = -3600 (no crash here).
+    TEST_ASSERT_EQUAL_INT(-3600, fast_remaining(T0, 0));
+    TEST_ASSERT_TRUE(fast_is_overtime(T0, 0));
+}
+
 // ── Format hm ─────────────────────────────────────────────────────────────────
 
 void test_format_hm_zero(void) {
