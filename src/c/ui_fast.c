@@ -141,8 +141,11 @@ void ui_fast_refresh(void) {
             int32_t target_sec = (int32_t)tgt_hours * 3600;
 
             show_overtime = rem < 0;
-            fast_format_hm(rem, s_time_buf);
-            s_ring_pct = (int32_t)(el * 100 / target_sec);
+            if (rem > -1800 && rem < 1800)
+                fast_format_hms(rem, s_time_buf);
+            else
+                fast_format_hm(rem, s_time_buf);
+            s_ring_pct = target_sec > 0 ? (int32_t)(el * 100 / target_sec) : 0;
             if (s_ring_pct > 100) s_ring_pct = 100;
 
             // Compute wall-clock fast-end time.
@@ -180,8 +183,11 @@ void ui_fast_refresh(void) {
             int32_t target_sec = (int32_t)tgt_hours * 3600;
 
             show_overtime = rem < 0;
-            fast_format_hm(rem, s_time_buf);
-            s_ring_pct = (int32_t)(el * 100 / target_sec);
+            if (rem > -1800 && rem < 1800)
+                fast_format_hms(rem, s_time_buf);
+            else
+                fast_format_hm(rem, s_time_buf);
+            s_ring_pct = target_sec > 0 ? (int32_t)(el * 100 / target_sec) : 0;
             if (s_ring_pct > 100) s_ring_pct = 100;
 
             s_ends_buf[0] = '\0';
