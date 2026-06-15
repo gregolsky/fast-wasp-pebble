@@ -7,6 +7,7 @@
 #include "storage.h"
 #include "notify.h"
 #include "ui_fast.h"
+#include "ui_alert.h"
 #include "ui_picker.h"
 #include "fasting.h"
 
@@ -22,7 +23,7 @@ static void handle_wakeup_on_launch(void) {
 static void inapp_wakeup_cb(int32_t reason) {
     NotifyEvent event = (NotifyEvent)reason;
     notify_handle(event);
-    ui_fast_show_banner(event);
+    ui_alert_push(event);
 }
 
 static void on_first_program_selected(uint8_t idx) {
@@ -40,7 +41,7 @@ static void app_init(void) {
     } else {
         ui_fast_push();
         if (s_launch_wakeup) {
-            ui_fast_show_banner(s_launch_event);
+            ui_alert_push(s_launch_event);
         }
     }
 

@@ -71,9 +71,18 @@ void test_stats_reset_clears(void);
 
 // test_wakeup.c
 void test_wakeup_target_for_16h_fast(void);
-void test_cancel_on_state_change(void);
-void test_schedule_cancels_previous(void);
+void test_cancel_event_clears_storage(void);
+void test_schedule_same_event_cancels_previous(void);
+void test_schedule_different_events_independent(void);
 void test_no_cancel_when_no_wakeup(void);
+void test_cancel_all_fasting_cancels_every_event(void);
+void test_milestones_16h_fast_schedules_all(void);
+void test_milestones_13h_fast_ketosis_collision(void);
+void test_milestones_10h_fast_drops_ketosis_and_autophagy(void);
+void test_milestones_disabled_skips_milestones_keeps_goal(void);
+void test_milestones_eat_window_schedule_unaffected(void);
+void test_milestones_cancel_all_after_scheduling(void);
+void test_milestones_default_on_when_not_set(void);
 
 int main(void) {
     UNITY_BEGIN();
@@ -133,9 +142,18 @@ int main(void) {
     RUN_TEST(test_stats_reset_clears);
 
     RUN_TEST(test_wakeup_target_for_16h_fast);
-    RUN_TEST(test_cancel_on_state_change);
-    RUN_TEST(test_schedule_cancels_previous);
+    RUN_TEST(test_cancel_event_clears_storage);
+    RUN_TEST(test_schedule_same_event_cancels_previous);
+    RUN_TEST(test_schedule_different_events_independent);
     RUN_TEST(test_no_cancel_when_no_wakeup);
+    RUN_TEST(test_cancel_all_fasting_cancels_every_event);
+    RUN_TEST(test_milestones_16h_fast_schedules_all);
+    RUN_TEST(test_milestones_13h_fast_ketosis_collision);
+    RUN_TEST(test_milestones_10h_fast_drops_ketosis_and_autophagy);
+    RUN_TEST(test_milestones_disabled_skips_milestones_keeps_goal);
+    RUN_TEST(test_milestones_eat_window_schedule_unaffected);
+    RUN_TEST(test_milestones_cancel_all_after_scheduling);
+    RUN_TEST(test_milestones_default_on_when_not_set);
 
     return UNITY_END();
 }

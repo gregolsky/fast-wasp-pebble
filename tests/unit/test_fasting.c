@@ -1,6 +1,7 @@
 #include "unity.h"
 #include "fasting.h"
 #include "storage.h"
+#include "notify.h"
 #include "platform/time.h"
 #include "platform/persist.h"
 
@@ -240,7 +241,7 @@ void test_storage_program_id_default(void) {
 }
 
 void test_storage_wakeup_id_default(void) {
-    TEST_ASSERT_EQUAL_INT(-1, storage_get_wakeup_id());
+    TEST_ASSERT_EQUAL_INT(-1, storage_get_wakeup_id_for_event((uint8_t)NOTIFY_FAST_COMPLETE));
 }
 
 void test_storage_vibration_default(void) {

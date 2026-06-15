@@ -35,9 +35,6 @@ static char s_time_buf[16];
 static char s_ends_buf[16];
 static char s_hint_buf[24];
 
-static int  s_banner_ticks;
-static char s_banner_buf[40];
-
 // ── Ring drawing ──────────────────────────────────────────────────────────────
 
 static int32_t s_ring_pct;    // 0..100; updated each tick
@@ -73,7 +70,6 @@ static void schedule_tick(void);
 
 static void tick_cb(void *ctx) {
     (void)ctx;
-    if (s_banner_ticks > 0) s_banner_ticks--;
     ui_fast_refresh();
     schedule_tick();
 }
@@ -227,27 +223,9 @@ void ui_fast_refresh(void) {
     text_layer_set_text(s_program_label,  s_prog_buf);
     text_layer_set_text(s_time_label,     s_time_buf);
     text_layer_set_text(s_ends_at_label,  s_ends_buf);
-    text_layer_set_text(s_hint_label,     s_banner_ticks > 0 ? s_banner_buf : s_hint_buf);
+    text_layer_set_text(s_hint_label,     s_hint_buf);
     text_layer_set_text(s_overtime_label, show_overtime ? "OVERTIME" : "");
     layer_mark_dirty(s_ring_layer);
-}
-
-// ── Banner ────────────────────────────────────────────────────────────────────
-
-void ui_fast_show_banner(NotifyEvent ev) {
-    switch (ev) {
-        case NOTIFY_FAST_COMPLETE:
-            snprintf(s_banner_buf, sizeof(s_banner_buf), "Fast done! SEL=STOP");
-            break;
-        case NOTIFY_EAT_WINDOW_CLOSED:
-            snprintf(s_banner_buf, sizeof(s_banner_buf), "Eat done! SEL=FAST");
-            break;
-        case NOTIFY_OMAD_TARGET:
-            snprintf(s_banner_buf, sizeof(s_banner_buf), "OMAD target! SEL=ATE");
-            break;
-    }
-    s_banner_ticks = 5;
-    if (s_window) text_layer_set_text(s_hint_label, s_banner_buf);
 }
 
 // ── Button handlers ───────────────────────────────────────────────────────────
@@ -257,7 +235,7 @@ static void on_select_program(uint8_t idx) {
     storage_set_fast_started_at(0);
     storage_set_eat_started_at(0);
     storage_set_omad_last_meal_at(0);
-    notify_cancel();
+    notify_cancel_all_fasting();
     s_fast_complete_fired = false;
     s_eat_complete_fired  = false;
     APP_LOG(APP_LOG_LEVEL_INFO, "program-selected");
@@ -278,7 +256,7 @@ static void click_select_short(ClickRecognizerRef r, void *ctx) {
                     s_fast_complete_fired = false;
                     int32_t st = storage_get_fast_started_at();
                     uint8_t th = storage_get_fast_target_hours();
-                    notify_schedule(NOTIFY_FAST_COMPLETE, st + (int32_t)th * 3600);
+                    notify_schedule_fast_milestones(st, th);
                 }
                 vibes_short_pulse();
             }
@@ -286,7 +264,7 @@ static void click_select_short(ClickRecognizerRef r, void *ctx) {
 
         case FAST_STATE_ACTIVE:
             stop_fast();
-            notify_cancel();
+            notify_cancel_all_fasting();
             if (storage_get_eat_started_at() != 0) {
                 int32_t es = storage_get_eat_started_at();
                 uint8_t eh = storage_get_eat_target_hours();
@@ -298,11 +276,11 @@ static void click_select_short(ClickRecognizerRef r, void *ctx) {
 
         case FAST_STATE_EATING:
             eating_window_restart_fast();
-            notify_cancel();
+            notify_cancel_all_fasting();
             {
                 int32_t st = storage_get_fast_started_at();
                 uint8_t th = storage_get_fast_target_hours();
-                notify_schedule(NOTIFY_FAST_COMPLETE, st + (int32_t)th * 3600);
+                notify_schedule_fast_milestones(st, th);
                 s_fast_complete_fired = false;
             }
             vibes_short_pulse();
@@ -310,7 +288,7 @@ static void click_select_short(ClickRecognizerRef r, void *ctx) {
 
         case FAST_STATE_OMAD:
             log_meal();
-            notify_cancel();
+            notify_cancel_event(NOTIFY_OMAD_TARGET);
             notify_schedule(NOTIFY_OMAD_TARGET,
                             storage_get_omad_last_meal_at() + 23 * 3600);
             vibes_short_pulse();
@@ -412,7 +390,6 @@ static void window_load(Window *win) {
 
     s_fast_complete_fired = false;
     s_eat_complete_fired  = false;
-    s_banner_ticks        = 0;
     ui_fast_refresh();
     schedule_tick();
 }

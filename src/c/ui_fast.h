@@ -15,6 +15,3 @@ void ui_fast_push(void);
 
 // Refresh the displayed state from storage (called after state changes).
 void ui_fast_refresh(void);
-
-// Show a temporary banner in the hint row (auto-clears after ~5 ticks).
-void ui_fast_show_banner(NotifyEvent ev);

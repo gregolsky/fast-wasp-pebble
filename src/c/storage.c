@@ -41,10 +41,18 @@ bool storage_get_vibration_on(void) {
 }
 void storage_set_vibration_on(bool v) { persist_write_int(K_VIBRATION_ON, (int32_t)v); }
 
-int32_t storage_get_wakeup_id(void) {
-    return persist_exists(K_WAKEUP_ID) ? (int32_t)persist_read_int(K_WAKEUP_ID) : -1;
+bool storage_get_milestones_on(void) {
+    return persist_exists(K_MILESTONES_ON) ? (bool)persist_read_int(K_MILESTONES_ON) : true;
 }
-void storage_set_wakeup_id(int32_t v) { persist_write_int(K_WAKEUP_ID, v); }
+void storage_set_milestones_on(bool v) { persist_write_int(K_MILESTONES_ON, (int32_t)v); }
+
+int32_t storage_get_wakeup_id_for_event(uint8_t event) {
+    uint32_t key = K_WAKEUP_ID_BASE + (uint32_t)event;
+    return persist_exists(key) ? (int32_t)persist_read_int(key) : -1;
+}
+void storage_set_wakeup_id_for_event(uint8_t event, int32_t id) {
+    persist_write_int(K_WAKEUP_ID_BASE + (uint32_t)event, id);
+}
 
 // ── Stats aggregate ───────────────────────────────────────────────────────────
 
@@ -82,7 +90,9 @@ void storage_reset_all(void) {
     persist_delete(K_EAT_TARGET_HOURS);
     persist_delete(K_OMAD_LAST_MEAL_AT);
     persist_delete(K_VIBRATION_ON);
-    persist_delete(K_WAKEUP_ID);
+    persist_delete(K_MILESTONES_ON);
+    persist_delete(9u); // K_WAKEUP_ID legacy key, keep deleting for clean migration
+    for (uint32_t e = 0; e < 7; e++) persist_delete(K_WAKEUP_ID_BASE + e);
     persist_delete(K_STATS_COUNT);
     persist_delete(K_STATS_TOTAL_SEC);
     persist_delete(K_STATS_LONGEST_SEC);

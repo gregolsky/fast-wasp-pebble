@@ -4,26 +4,54 @@
 #include <stdbool.h>
 
 typedef enum {
-    NOTIFY_FAST_COMPLETE,
-    NOTIFY_EAT_WINDOW_CLOSED,
-    NOTIFY_OMAD_TARGET,
+    NOTIFY_FAST_COMPLETE     = 0,
+    NOTIFY_EAT_WINDOW_CLOSED = 1,
+    NOTIFY_OMAD_TARGET       = 2,
+    NOTIFY_FAST_HALFWAY      = 3,
+    NOTIFY_FAST_1H_LEFT      = 4,
+    NOTIFY_KETOSIS_START     = 5,
+    NOTIFY_AUTOPHAGY_START   = 6,
+    NOTIFY_EVENT_COUNT       = 7,
 } NotifyEvent;
 
-// Schedule a wakeup for the given event. Cancels any previously scheduled wakeup.
-// target_at: epoch seconds when the event should fire.
+#define KETOSIS_OFFSET_S     (12 * 3600)
+#define AUTOPHAGY_OFFSET_S   (16 * 3600)
+#define ONE_HOUR_S           3600
+#define COLLISION_THRESHOLD_S 60
+#define COLLISION_SHIFT_S    (30 * 60)
+
+// Schedule a wakeup for the given event. Cancels any previously scheduled
+// wakeup for the same event type.
 void notify_schedule(NotifyEvent event, int32_t target_at);
 
-// Cancel the currently scheduled wakeup (if any).
-void notify_cancel(void);
+// Cancel the wakeup for the given event (if any).
+void notify_cancel_event(NotifyEvent event);
+
+// Cancel all fasting-related wakeups (call on stop/reset).
+void notify_cancel_all_fasting(void);
+
+// Schedule FAST_COMPLETE + all applicable fast milestones based on start time
+// and target duration. Milestones are skipped if K_MILESTONES_ON is false.
+void notify_schedule_fast_milestones(int32_t started_at, uint8_t target_hours);
 
 // Call on app launch: returns true if this launch was triggered by a wakeup,
 // and populates *event with the event type. Call notify_handle() to act on it.
 bool notify_check_wakeup(NotifyEvent *event);
 
-// Vibrate + show appropriate banner for the event (called after wakeup relaunch).
+// Vibrate for the event (called after wakeup relaunch). Gated by vibration toggle.
 void notify_handle(NotifyEvent event);
 
 // Register a callback invoked when a wakeup fires while the app is already open.
-// The callback receives the NotifyEvent reason cast to int32_t.
 typedef void (*NotifyInAppCallback)(int32_t event_reason);
 void notify_subscribe_inapp(NotifyInAppCallback cb);
+
+// ── Unit-test introspection (host build only) ─────────────────────────────────
+#ifdef FAST_PEBBLE_HOST_BUILD
+int     notify_stub_scheduled_count(void);
+bool    notify_stub_is_scheduled(NotifyEvent e);
+int32_t notify_stub_target_for(NotifyEvent e);
+int32_t notify_stub_last_target(void);
+int32_t notify_stub_last_event(void);
+int     notify_stub_cancel_count(void);
+void    notify_stub_reset(void);
+#endif

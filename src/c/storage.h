@@ -13,11 +13,14 @@
 #define K_OMAD_LAST_MEAL_AT  6u
 // K_FAST_HISTORY = 7 retired (ring exceeded 256-byte per-key limit)
 #define K_VIBRATION_ON       8u
-#define K_WAKEUP_ID          9u
+// K_WAKEUP_ID = 9 retired — per-event wakeup IDs now use K_WAKEUP_ID_BASE + event
 #define K_STATS_COUNT        10u
 #define K_STATS_TOTAL_SEC    11u
 #define K_STATS_LONGEST_SEC  12u
 #define K_STATS_OVERTIME_SEC 13u
+// Per-event wakeup IDs: keys K_WAKEUP_ID_BASE+0 .. K_WAKEUP_ID_BASE+6 (events 0..6)
+#define K_WAKEUP_ID_BASE     14u
+#define K_MILESTONES_ON      21u
 
 // ── Getters / setters ─────────────────────────────────────────────────────────
 
@@ -42,8 +45,12 @@ void     storage_set_omad_last_meal_at(int32_t v);
 bool     storage_get_vibration_on(void);
 void     storage_set_vibration_on(bool v);
 
-int32_t  storage_get_wakeup_id(void);
-void     storage_set_wakeup_id(int32_t v);
+bool     storage_get_milestones_on(void);
+void     storage_set_milestones_on(bool v);
+
+// Per-event wakeup ID slots (managed by notify.c).
+int32_t  storage_get_wakeup_id_for_event(uint8_t event);
+void     storage_set_wakeup_id_for_event(uint8_t event, int32_t id);
 
 // ── Stats aggregate ───────────────────────────────────────────────────────────
 

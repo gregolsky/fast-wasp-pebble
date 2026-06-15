@@ -9,10 +9,11 @@
 #include <pebble.h>
 #include <stdio.h>
 
-#define ROW_VIBRATION 0
-#define ROW_RESET     1
-#define ROW_ABOUT     2
-#define NUM_ROWS      3
+#define ROW_VIBRATION  0
+#define ROW_MILESTONES 1
+#define ROW_RESET      2
+#define ROW_ABOUT      3
+#define NUM_ROWS       4
 
 static Window    *s_window;
 static MenuLayer *s_menu;
@@ -30,6 +31,12 @@ static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *idx, voi
             char sub[16];
             snprintf(sub, sizeof(sub), "%s", storage_get_vibration_on() ? "On" : "Off");
             menu_cell_basic_draw(ctx, cell_layer, "Vibration", sub, NULL);
+            break;
+        }
+        case ROW_MILESTONES: {
+            char sub[16];
+            snprintf(sub, sizeof(sub), "%s", storage_get_milestones_on() ? "On" : "Off");
+            menu_cell_basic_draw(ctx, cell_layer, "Milestones", sub, NULL);
             break;
         }
         case ROW_RESET:
@@ -51,9 +58,13 @@ static void on_select(MenuLayer *ml, MenuIndex *idx, void *ctx) {
             storage_set_vibration_on(!storage_get_vibration_on());
             menu_layer_reload_data(s_menu);
             break;
+        case ROW_MILESTONES:
+            storage_set_milestones_on(!storage_get_milestones_on());
+            menu_layer_reload_data(s_menu);
+            break;
         case ROW_RESET:
             if (s_confirm_reset) {
-                notify_cancel();
+                notify_cancel_all_fasting();
                 storage_reset_all();
                 APP_LOG(APP_LOG_LEVEL_INFO, "storage-reset");
                 window_stack_pop_all(true);
