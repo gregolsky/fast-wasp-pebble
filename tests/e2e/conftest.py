@@ -7,11 +7,11 @@ SDK_PY       = (os.path.join(os.path.dirname(_pebble_bin), "python3")
                 if _pebble_bin else "python3")
 DRIVER       = os.path.join(os.path.dirname(__file__), "driver.py")
 ARTIFACT_DIR = os.path.join(os.path.dirname(__file__), "_artifacts")
+ROOT_DIR     = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
 def _find_pbw():
-    root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    m = glob.glob(os.path.join(root, "build", "*.pbw"))
+    m = glob.glob(os.path.join(ROOT_DIR, "build", "*.pbw"))
     if not m:
         raise FileNotFoundError("No .pbw in build/ -- run pebble build first.")
     return m[0]
@@ -37,10 +37,30 @@ class PebbleEmulator:
 
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 
+    @staticmethod
+    def _clear_emulator_state():
+        """Remove the pebble-tool emulator state file so the next install starts fresh.
+        Without this, zombie PIDs left after SIGKILL make pebble-tool think old processes
+        are still running and try to connect to their (dead) ports."""
+        try:
+            os.remove("/tmp/pb-emulator.json")
+        except FileNotFoundError:
+            pass
+
     def start(self):
-        subprocess.run(["pebble", "kill"], capture_output=True)
-        subprocess.run(["pebble", "install", "--emulator", self.platform,
-                        _find_pbw()], check=True, capture_output=True)
+        self._clear_emulator_state()
+        pbw = _find_pbw()
+        for attempt in range(6):
+            result = subprocess.run(
+                ["pebble", "install", "--emulator", self.platform, pbw],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0:
+                break
+            print(f"[install attempt {attempt} rc={result.returncode}]: {(result.stderr or result.stdout)[:300]}", flush=True)
+            time.sleep(1)
+        else:
+            raise RuntimeError("pebble install failed after 6 attempts")
         subprocess.run(["pebble", "wipe"], capture_output=True)
         time.sleep(3)
         self._start_logs()
@@ -53,7 +73,9 @@ class PebbleEmulator:
             except subprocess.TimeoutExpired:
                 self._log_proc.kill()
             self._log_proc = None
-        subprocess.run(["pebble", "kill"], capture_output=True)
+        subprocess.run(["pebble", "kill", "--force"], capture_output=True)
+        self._clear_emulator_state()
+        time.sleep(5)  # wait for QEMU to release ports before next test
 
     def reinstall(self):
         """Reinstall (relaunch) the app without wiping storage."""

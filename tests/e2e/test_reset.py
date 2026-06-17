@@ -4,7 +4,6 @@ import time
 
 
 def _open_settings(pebble):
-    # From Ready: press DOWN to open Settings directly.
     pebble.press("down")
     time.sleep(0.5)
 
@@ -18,8 +17,9 @@ def test_reset_clears_state(pebble):
 
     _open_settings(pebble)
 
-    # Navigate to "Reset Data" (second item) and confirm twice.
-    pebble.press("down")
+    # Navigate to "Reset Data" (third item: Vibration, Milestones, Reset Data).
+    pebble.press("down")     # -> Milestones
+    pebble.press("down")     # -> Reset Data
     pebble.press("select")   # arm confirm
     time.sleep(0.3)
     pebble.press("select")   # confirm reset
@@ -27,7 +27,7 @@ def test_reset_clears_state(pebble):
 
     assert pebble.wait_for_log("storage-reset"), "Expected storage-reset log after reset"
 
-    # App exits after stack pop; reinstall to verify picker appears on relaunch.
+    # After reset the app exits; verify picker appears on fresh launch.
     pebble.reinstall()
     assert pebble.wait_for_log("state-picker"), \
         "Expected Program Picker on relaunch after reset"

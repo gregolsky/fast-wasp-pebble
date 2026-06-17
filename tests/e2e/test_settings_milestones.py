@@ -3,7 +3,7 @@
 
 def test_settings_milestones_row_present(pebble):
     pebble.press("down")  # open Settings
-    assert pebble.wait_for_log("app-version"), "app still running"
+    assert pebble.wait_for_log("state-ready"), "app still running"
     # Navigate into Settings — DOWN opens it from the fast screen
     # Row order: Vibration, Milestones, Reset Data, About
     # Just verify the app launches and we can navigate without crashing

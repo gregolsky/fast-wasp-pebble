@@ -19,6 +19,9 @@ npm-debug.log*
 tests/unit/build/
 src/c/version.h
 
+# uv package cache (populated on first e2e run, reused offline after)
+.uv-cache/
+
 # Editor / OS junk
 .vscode/
 .idea/
