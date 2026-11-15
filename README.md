@@ -30,8 +30,10 @@ A glanceable, native intermittent-fasting tracker for the new Pebble devices fro
 
 | Device | Platform | Display |
 |--------|----------|---------|
-| Core 2 Duo | `diorite` | 144×168 B&W |
+| Core 2 Duo | `flint` | 144×168 B&W |
+| Pebble 2 | `diorite` | 144×168 B&W |
 | Pebble Time 2 | `emery` | 200×228 colour |
+| Pebble Round 2 | `gabbro` | 260×260 round colour |
 | Pebble Time / Time Steel | `basalt` | 144×168 colour |
 
 ---

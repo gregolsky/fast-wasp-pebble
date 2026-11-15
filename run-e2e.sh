@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-IMAGE="gregolsky/pebble-sdk:pebble-tool-5.0.37-sdk-4.9.169"
+IMAGE="gregolsky/pebble-sdk:pebble-tool-5.1.2-sdk-4.33.1"
 
 # Default to full suite; pass explicit args to override with node IDs / paths.
 if [ "$#" -eq 0 ]; then

@@ -10,6 +10,7 @@
 #include "ui_alert.h"
 #include "ui_picker.h"
 #include "fasting.h"
+#include "glance.h"
 
 static bool        s_launch_wakeup = false;
 static NotifyEvent s_launch_event;
@@ -49,7 +50,7 @@ static void app_init(void) {
 }
 
 static void app_deinit(void) {
-    // Nothing to clean up — Pebble reclaims all heap on exit.
+    glance_update(); // launcher glance only refreshes on exit
 }
 
 int main(void) {

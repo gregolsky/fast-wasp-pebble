@@ -1,7 +1,7 @@
 {
   "name": "fast-pebble",
   "author": "Grzegorz Lachowski",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "keywords": ["pebble-app", "fasting", "health", "timer"],
   "private": true,
   "dependencies": {},
@@ -13,7 +13,9 @@
     "targetPlatforms": [
       "diorite",
       "emery",
-      "basalt"
+      "basalt",
+      "flint",
+      "gabbro"
     ],
     "watchapp": {
       "watchface": false

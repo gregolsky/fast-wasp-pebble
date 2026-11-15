@@ -56,42 +56,46 @@ static void window_load(Window *win) {
 
     window_set_background_color(win, GColorBlack);
 
+    // Round screens: centre text and pull it in from the bezel.
+    int inset = PBL_IF_ROUND_ELSE(30, 6);
+    GTextAlignment align = PBL_IF_ROUND_ELSE(GTextAlignmentCenter, GTextAlignmentLeft);
+
 #ifdef PBL_COLOR
-    int header_h = 44;
+    int header_h = PBL_IF_ROUND_ELSE(64, 44);
     s_header_layer = layer_create(GRect(0, 0, bounds.size.w, header_h));
     layer_set_update_proc(s_header_layer, header_draw);
     layer_add_child(root, s_header_layer);
 
-    s_title_layer = text_layer_create(GRect(6, 8, bounds.size.w - 12, header_h - 12));
+    s_title_layer = text_layer_create(GRect(inset, PBL_IF_ROUND_ELSE(26, 8), bounds.size.w - 2 * inset, header_h - PBL_IF_ROUND_ELSE(30, 12)));
     text_layer_set_background_color(s_title_layer, GColorClear);
     text_layer_set_text_color(s_title_layer, GColorBlack);
     text_layer_set_font(s_title_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-    text_layer_set_text_alignment(s_title_layer, GTextAlignmentLeft);
+    text_layer_set_text_alignment(s_title_layer, align);
     layer_add_child(root, text_layer_get_layer(s_title_layer));
 
-    s_body_layer = text_layer_create(GRect(6, header_h + 6, bounds.size.w - 12, bounds.size.h - header_h - 30));
+    s_body_layer = text_layer_create(GRect(inset, header_h + 6, bounds.size.w - 2 * inset, bounds.size.h - header_h - 30));
 #else
-    s_title_layer = text_layer_create(GRect(6, 10, bounds.size.w - 12, 30));
+    s_title_layer = text_layer_create(GRect(inset, 10, bounds.size.w - 2 * inset, 30));
     text_layer_set_background_color(s_title_layer, GColorClear);
     text_layer_set_text_color(s_title_layer, GColorWhite);
     text_layer_set_font(s_title_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-    text_layer_set_text_alignment(s_title_layer, GTextAlignmentLeft);
+    text_layer_set_text_alignment(s_title_layer, align);
     layer_add_child(root, text_layer_get_layer(s_title_layer));
 
-    s_body_layer = text_layer_create(GRect(6, 44, bounds.size.w - 12, bounds.size.h - 66));
+    s_body_layer = text_layer_create(GRect(inset, 44, bounds.size.w - 2 * inset, bounds.size.h - 66));
 #endif
     text_layer_set_background_color(s_body_layer, GColorClear);
     text_layer_set_text_color(s_body_layer, GColorLightGray);
     text_layer_set_font(s_body_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
-    text_layer_set_text_alignment(s_body_layer, GTextAlignmentLeft);
+    text_layer_set_text_alignment(s_body_layer, align);
     text_layer_set_overflow_mode(s_body_layer, GTextOverflowModeWordWrap);
     layer_add_child(root, text_layer_get_layer(s_body_layer));
 
-    s_hint_layer = text_layer_create(GRect(6, bounds.size.h - 20, bounds.size.w - 12, 18));
+    s_hint_layer = text_layer_create(GRect(inset, bounds.size.h - PBL_IF_ROUND_ELSE(34, 20), bounds.size.w - 2 * inset, 18));
     text_layer_set_background_color(s_hint_layer, GColorClear);
     text_layer_set_text_color(s_hint_layer, GColorDarkGray);
     text_layer_set_font(s_hint_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-    text_layer_set_text_alignment(s_hint_layer, GTextAlignmentLeft);
+    text_layer_set_text_alignment(s_hint_layer, align);
     layer_add_child(root, text_layer_get_layer(s_hint_layer));
 
     window_set_click_config_provider(win, click_config);

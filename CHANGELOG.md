@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.11.0] — 2026-11-15
+
+### ✨ Added
+- **App Glance**: the launcher shows a live countdown under the app name ("Fast ends in 3 hr 12 min", "Eat window: 45 min left", OMAD time since the last meal)
+- **New platforms**: Pebble Round 2 (`gabbro`) and Core 2 Duo (`flint`)
+
+### ✨ Changed
+- Stats and the alert screen centre their text on round displays
+
+### 🔧 Tooling
+- Build image bumped to `gregolsky/pebble-sdk:pebble-tool-5.1.2-sdk-4.33.1` (docker-pebble-sdk v0.3.4)
+
+---
+
+## [1.10.0] — 2026-06-16
+
+### ✨ Added
+- **Milestone notifications**: halfway, 1h left, ketosis (12h) and autophagy (16h) alerts during a fast, with collision avoidance
+- **Alert screen**: a full-screen alert replaces the inline banner when any wakeup fires
+- **Settings → Milestones** toggle (default on); goal alerts always stay on
+
+---
+
 ## [1.9.0] — 2026-06-10
 
 ### 🔧 Tooling

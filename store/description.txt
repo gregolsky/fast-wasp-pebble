@@ -20,4 +20,6 @@ Stats. Total fasts completed, average fast length, longest fast, and total overt
 
 100% offline. All data lives in watch persistent storage. Nothing leaves your wrist.
 
-Supports Core 2 Duo (diorite, 144x168 B&W) and Pebble Time 2 (emery, 200x228 colour).
+Supports Core 2 Duo, Pebble 2, Pebble Time 2, Pebble Round 2 and Pebble Time.
+
+The launcher shows a live countdown for your fast, so you can check it without opening the app.

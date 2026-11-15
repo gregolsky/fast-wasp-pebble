@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Capture emulator screenshots headlessly via Docker + SDL_VIDEODRIVER=dummy.
-# Usage: ./make-screenshots.sh [diorite|emery|basalt]   (default: basalt)
+# Usage: ./make-screenshots.sh [diorite|emery|basalt|gabbro]   (default: basalt)
+# gabbro runs its own (working) emulator; the others use basalt.
 #
 # NOTE: diorite and emery QEMU emulation is broken (no I2C PMIC). This script
 # always runs the basalt emulator internally. diorite is fine — it shares the
@@ -11,8 +12,8 @@ set -euo pipefail
 PLATFORM="${1:-basalt}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-if [[ "$PLATFORM" != "basalt" && "$PLATFORM" != "diorite" && "$PLATFORM" != "emery" ]]; then
-    echo "Usage: $0 [basalt|diorite|emery]" >&2
+if [[ "$PLATFORM" != "basalt" && "$PLATFORM" != "diorite" && "$PLATFORM" != "emery" && "$PLATFORM" != "gabbro" ]]; then
+    echo "Usage: $0 [basalt|diorite|emery|gabbro]" >&2
     exit 1
 fi
 
@@ -28,10 +29,10 @@ docker run --rm \
     -w /pebble \
     -e SDL_VIDEODRIVER=dummy \
     -e SDL_AUDIODRIVER=dummy \
-    gregolsky/pebble-sdk:pebble-tool-5.0.37-sdk-4.9.169 \
+    gregolsky/pebble-sdk:pebble-tool-5.1.2-sdk-4.33.1 \
     bash -c "
 set -e
-EMU_PLATFORM=basalt
+EMU_PLATFORM=$([[ $PLATFORM == gabbro ]] && echo gabbro || echo basalt)
 OUT_DIR=screenshots/$PLATFORM
 SDK_PY=$(dirname $(which pebble))/python3
 DRIVER=tests/e2e/driver.py

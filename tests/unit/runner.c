@@ -84,6 +84,13 @@ void test_milestones_eat_window_schedule_unaffected(void);
 void test_milestones_cancel_all_after_scheduling(void);
 void test_milestones_default_on_when_not_set(void);
 
+// test_glance.c
+void test_glance_none_without_program(void);
+void test_glance_none_when_ready(void);
+void test_glance_active_fast_counts_to_goal(void);
+void test_glance_eating_counts_to_window_end(void);
+void test_glance_omad_counts_since_meal(void);
+
 int main(void) {
     UNITY_BEGIN();
 
@@ -154,6 +161,13 @@ int main(void) {
     RUN_TEST(test_milestones_eat_window_schedule_unaffected);
     RUN_TEST(test_milestones_cancel_all_after_scheduling);
     RUN_TEST(test_milestones_default_on_when_not_set);
+
+
+    RUN_TEST(test_glance_none_without_program);
+    RUN_TEST(test_glance_none_when_ready);
+    RUN_TEST(test_glance_active_fast_counts_to_goal);
+    RUN_TEST(test_glance_eating_counts_to_window_end);
+    RUN_TEST(test_glance_omad_counts_since_meal);
 
     return UNITY_END();
 }

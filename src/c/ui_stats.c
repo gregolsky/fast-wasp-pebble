@@ -126,11 +126,13 @@ static void window_load(Window *win) {
 
     build_body();
 
-    s_body = text_layer_create(GRect(8, 30, bounds.size.w - 16, bounds.size.h - 34));
+    int inset = PBL_IF_ROUND_ELSE(36, 8); // keep text inside the round bezel
+    s_body = text_layer_create(GRect(inset, 30, bounds.size.w - 2 * inset, bounds.size.h - 34));
     text_layer_set_background_color(s_body, GColorClear);
     text_layer_set_text_color(s_body, GColorWhite);
     text_layer_set_font(s_body, fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_overflow_mode(s_body, GTextOverflowModeWordWrap);
+    text_layer_set_text_alignment(s_body, PBL_IF_ROUND_ELSE(GTextAlignmentCenter, GTextAlignmentLeft));
     text_layer_set_text(s_body, s_body_buf);
     layer_add_child(root, text_layer_get_layer(s_body));
 

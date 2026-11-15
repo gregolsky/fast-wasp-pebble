@@ -3,7 +3,7 @@ set -euo pipefail
 
 PHONE_IP="${1:-}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-IMAGE="gregolsky/pebble-sdk:pebble-tool-5.0.37-sdk-4.9.169"
+IMAGE="gregolsky/pebble-sdk:pebble-tool-5.1.2-sdk-4.33.1"
 
 if [[ -z "$PHONE_IP" ]]; then
     echo "Usage: ./deploy.sh <phone-ip>" >&2

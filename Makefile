@@ -1,4 +1,4 @@
-PEBBLE_IMAGE := gregolsky/pebble-sdk:pebble-tool-5.0.37-sdk-4.9.169
+PEBBLE_IMAGE := gregolsky/pebble-sdk:pebble-tool-5.1.2-sdk-4.33.1
 VERSION      := $(shell python3 -c "import json; print(json.load(open('package.json'))['version'])")
 
 CC      := gcc
@@ -12,6 +12,7 @@ UNIT_SRCS := \
   src/c/fasting.c \
   src/c/storage.c \
   src/c/notify.c \
+  src/c/glance.c \
   tests/unit/shims/time_shim.c \
   tests/unit/shims/persist_shim.c \
   tests/unit/vendor/unity/unity.c \
@@ -20,6 +21,7 @@ UNIT_SRCS := \
   tests/unit/test_omad.c \
   tests/unit/test_stats.c \
   tests/unit/test_wakeup.c \
+  tests/unit/test_glance.c \
   tests/unit/runner.c
 
 UNIT_BIN := tests/unit/build/run_tests
