@@ -4,10 +4,10 @@ set -euo pipefail
 PLATFORM="${1:-basalt}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-if [[ "$PLATFORM" != "emery" && "$PLATFORM" != "diorite" && "$PLATFORM" != "basalt" ]]; then
-    echo "Usage: $0 [basalt|diorite|emery]" >&2
+if [[ "$PLATFORM" != "emery" && "$PLATFORM" != "diorite" && "$PLATFORM" != "basalt" && "$PLATFORM" != "gabbro" ]]; then
+    echo "Usage: $0 [basalt|diorite|emery|gabbro]" >&2
     echo "Note: diorite/emery QEMU emulation is broken (I2C PMIC not emulated)." >&2
-    echo "      Use basalt for emulator testing; diorite/emery build for physical device." >&2
+    echo "      Use basalt or gabbro for emulator testing; diorite/emery build for physical device." >&2
     exit 1
 fi
 

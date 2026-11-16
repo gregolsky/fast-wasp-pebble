@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # Capture emulator screenshots headlessly via Docker + SDL_VIDEODRIVER=dummy.
 # Usage: ./make-screenshots.sh [diorite|emery|basalt|gabbro]   (default: basalt)
-# gabbro runs its own (working) emulator; the others use basalt.
 #
-# NOTE: diorite and emery QEMU emulation is broken (no I2C PMIC). This script
-# always runs the basalt emulator internally. diorite is fine — it shares the
+# NOTE: diorite and emery QEMU emulation is broken (no I2C PMIC), so those run
+# the basalt emulator internally; gabbro runs its own (working) emulator. diorite is fine — it shares the
 # exact same 144x168 frame as basalt. Pass "emery" only if you want basalt-sized
 # stand-ins; for true 200x228 emery shots use your physical watch instead.
 set -euo pipefail

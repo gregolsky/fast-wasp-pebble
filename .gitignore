@@ -16,6 +16,7 @@ npm-debug.log*
 .pebble-sdk-cache/
 
 # Host-build artefacts
+tests/e2e/_artifacts/
 tests/unit/build/
 src/c/version.h
 
