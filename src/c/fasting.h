@@ -6,6 +6,8 @@
 // ── Programs ──────────────────────────────────────────────────────────────────
 
 #define NUM_PROGRAMS 6
+#define NO_PROGRAM   0xFF
+#define OMAD_HOURS   23
 
 typedef struct {
     const char *label;
@@ -19,6 +21,30 @@ extern const Program PROGRAMS[NUM_PROGRAMS];
 
 // Index 0..5  (OMAD is index 5)
 const Program *program_by_index(uint8_t idx);
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
+typedef enum {
+    FAST_STATE_READY,
+    FAST_STATE_ACTIVE,
+    FAST_STATE_EATING,
+    FAST_STATE_OMAD,
+} FastState;
+
+// Current state derived from storage (single source for UI and glance).
+FastState fasting_state(void);
+
+// ── User actions (state change + alert scheduling) ────────────────────────────
+
+// SELECT on the main screen: start/stop fast, restart from eating, log meal.
+// Returns false when nothing happened (no program chosen).
+bool fasting_select(void);
+
+// Switch program: clears any running fast/eat/OMAD state and its alerts.
+void fasting_choose_program(uint8_t idx);
+
+// Wipe all data and cancel every alert.
+void fasting_reset_all(void);
 
 // ── Timer arithmetic ──────────────────────────────────────────────────────────
 

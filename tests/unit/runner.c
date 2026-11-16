@@ -91,6 +91,15 @@ void test_glance_active_fast_counts_to_goal(void);
 void test_glance_eating_counts_to_window_end(void);
 void test_glance_omad_counts_since_meal(void);
 
+// test_actions.c
+void test_state_ready_without_program(void);
+void test_select_starts_fast_and_schedules_goal(void);
+void test_select_stops_fast_opens_eat_window_alert(void);
+void test_select_from_eating_restarts_fast(void);
+void test_select_omad_second_meal_schedules_target(void);
+void test_choose_program_clears_state_and_alerts(void);
+void test_reset_all_clears_program_and_alerts(void);
+
 int main(void) {
     UNITY_BEGIN();
 
@@ -168,6 +177,14 @@ int main(void) {
     RUN_TEST(test_glance_active_fast_counts_to_goal);
     RUN_TEST(test_glance_eating_counts_to_window_end);
     RUN_TEST(test_glance_omad_counts_since_meal);
+
+    RUN_TEST(test_state_ready_without_program);
+    RUN_TEST(test_select_starts_fast_and_schedules_goal);
+    RUN_TEST(test_select_stops_fast_opens_eat_window_alert);
+    RUN_TEST(test_select_from_eating_restarts_fast);
+    RUN_TEST(test_select_omad_second_meal_schedules_target);
+    RUN_TEST(test_choose_program_clears_state_and_alerts);
+    RUN_TEST(test_reset_all_clears_program_and_alerts);
 
     return UNITY_END();
 }

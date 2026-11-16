@@ -7,7 +7,6 @@
 #include "ui_settings.h"
 #include "fasting.h"
 #include "storage.h"
-#include "notify.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -25,7 +24,6 @@ static TextLayer   *s_ends_at_label;
 static TextLayer   *s_hint_label;
 static AppTimer    *s_tick_timer;
 
-static FastUIState  s_state;
 static bool         s_fast_complete_fired;
 static bool         s_eat_complete_fired;
 
@@ -85,19 +83,24 @@ static void cancel_tick(void) {
     }
 }
 
-// ── State detection ───────────────────────────────────────────────────────────
+// ── Countdown helpers (shared by fast and eating window) ──────────────────────
 
-static FastUIState detect_state(void) {
-    uint8_t prog = storage_get_program_id();
-    if (prog == 0xFF) return FAST_STATE_READY;  // no program set
+static int32_t ring_pct(int32_t elapsed, int32_t target_sec) {
+    if (target_sec <= 0) return 0;
+    int32_t pct = elapsed * 100 / target_sec;
+    return pct > 100 ? 100 : pct;
+}
 
-    const Program *p = program_by_index(prog);
-    if (p->is_omad) {
-        return storage_get_omad_last_meal_at() != 0 ? FAST_STATE_OMAD : FAST_STATE_READY;
-    }
-    if (storage_get_fast_started_at() != 0) return FAST_STATE_ACTIVE;
-    if (storage_get_eat_started_at()  != 0) return FAST_STATE_EATING;
-    return FAST_STATE_READY;
+// Fill s_time_buf and s_ring_pct for a window; returns true when overtime.
+static bool show_countdown(int32_t started, uint8_t target_hours) {
+    int32_t rem = fast_remaining(started, target_hours);
+    // HH:MM:SS in the last/first 30 min so the OVERTIME flip is visible.
+    if (rem > -1800 && rem < 1800)
+        fast_format_hms(rem, s_time_buf);
+    else
+        fast_format_hm(rem, s_time_buf);
+    s_ring_pct = ring_pct(fast_elapsed(started), (int32_t)target_hours * 3600);
+    return rem < 0;
 }
 
 // ── Refresh (called every tick and on state change) ───────────────────────────
@@ -105,14 +108,14 @@ static FastUIState detect_state(void) {
 void ui_fast_refresh(void) {
     if (!s_window) return;
 
-    s_state = detect_state();
+    FastState state = fasting_state();
     uint8_t prog_idx = storage_get_program_id();
 
     bool show_overtime = false;
 
-    switch (s_state) {
+    switch (state) {
         case FAST_STATE_READY: {
-            if (prog_idx == 0xFF) {
+            if (prog_idx == NO_PROGRAM) {
                 s_mode_buf[0] = '\0';
                 snprintf(s_prog_buf, sizeof(s_prog_buf), "Select Program");
                 snprintf(s_hint_buf, sizeof(s_hint_buf), "Hold SEL to pick");
@@ -130,22 +133,12 @@ void ui_fast_refresh(void) {
         }
 
         case FAST_STATE_ACTIVE: {
-            int32_t started    = storage_get_fast_started_at();
-            uint8_t tgt_hours  = storage_get_fast_target_hours();
-            int32_t rem        = fast_remaining(started, tgt_hours);
-            int32_t el         = fast_elapsed(started);
-            int32_t target_sec = (int32_t)tgt_hours * 3600;
-
-            show_overtime = rem < 0;
-            if (rem > -1800 && rem < 1800)
-                fast_format_hms(rem, s_time_buf);
-            else
-                fast_format_hm(rem, s_time_buf);
-            s_ring_pct = target_sec > 0 ? (int32_t)(el * 100 / target_sec) : 0;
-            if (s_ring_pct > 100) s_ring_pct = 100;
+            int32_t started   = storage_get_fast_started_at();
+            uint8_t tgt_hours = storage_get_fast_target_hours();
+            show_overtime = show_countdown(started, tgt_hours);
 
             // Compute wall-clock fast-end time.
-            time_t end_ts = (time_t)(started + target_sec);
+            time_t end_ts = (time_t)(started + (int32_t)tgt_hours * 3600);
             struct tm *lt = localtime(&end_ts);
             if (lt) {
                 if (clock_is_24h_style()) {
@@ -172,19 +165,8 @@ void ui_fast_refresh(void) {
         }
 
         case FAST_STATE_EATING: {
-            int32_t started    = storage_get_eat_started_at();
-            uint8_t tgt_hours  = storage_get_eat_target_hours();
-            int32_t rem        = fast_remaining(started, tgt_hours);
-            int32_t el         = fast_elapsed(started);
-            int32_t target_sec = (int32_t)tgt_hours * 3600;
-
-            show_overtime = rem < 0;
-            if (rem > -1800 && rem < 1800)
-                fast_format_hms(rem, s_time_buf);
-            else
-                fast_format_hm(rem, s_time_buf);
-            s_ring_pct = target_sec > 0 ? (int32_t)(el * 100 / target_sec) : 0;
-            if (s_ring_pct > 100) s_ring_pct = 100;
+            show_overtime = show_countdown(storage_get_eat_started_at(),
+                                           storage_get_eat_target_hours());
 
             s_ends_buf[0] = '\0';
             const Program *p = program_by_index(prog_idx);
@@ -203,12 +185,11 @@ void ui_fast_refresh(void) {
         case FAST_STATE_OMAD: {
             int32_t last_meal  = storage_get_omad_last_meal_at();
             int32_t el         = fast_elapsed(last_meal);
-            int32_t target_sec = 23 * 3600;
+            int32_t target_sec = OMAD_HOURS * 3600;
 
             show_overtime = el >= target_sec;
             fast_format_hm(el, s_time_buf);
-            s_ring_pct = (int32_t)(el * 100 / target_sec);
-            if (s_ring_pct > 100) s_ring_pct = 100;
+            s_ring_pct = ring_pct(el, target_sec);
 
             s_ends_buf[0] = '\0';
             snprintf(s_mode_buf, sizeof(s_mode_buf), "Fasting");
@@ -231,11 +212,7 @@ void ui_fast_refresh(void) {
 // ── Button handlers ───────────────────────────────────────────────────────────
 
 static void on_select_program(uint8_t idx) {
-    storage_set_program_id(idx);
-    storage_set_fast_started_at(0);
-    storage_set_eat_started_at(0);
-    storage_set_omad_last_meal_at(0);
-    notify_cancel_all_fasting();
+    fasting_choose_program(idx);
     s_fast_complete_fired = false;
     s_eat_complete_fired  = false;
     APP_LOG(APP_LOG_LEVEL_INFO, "program-selected");
@@ -244,57 +221,12 @@ static void on_select_program(uint8_t idx) {
 
 static void click_select_short(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
-    const Program *p = program_by_index(storage_get_program_id());
-
-    switch (s_state) {
-        case FAST_STATE_READY:
-            if (storage_get_program_id() != 0xFF) {
-                if (p->is_omad) {
-                    log_meal();
-                } else {
-                    start_fast(storage_get_program_id());
-                    s_fast_complete_fired = false;
-                    int32_t st = storage_get_fast_started_at();
-                    uint8_t th = storage_get_fast_target_hours();
-                    notify_schedule_fast_milestones(st, th);
-                }
-                vibes_short_pulse();
-            }
-            break;
-
-        case FAST_STATE_ACTIVE:
-            stop_fast();
-            notify_cancel_all_fasting();
-            if (storage_get_eat_started_at() != 0) {
-                int32_t es = storage_get_eat_started_at();
-                uint8_t eh = storage_get_eat_target_hours();
-                notify_schedule(NOTIFY_EAT_WINDOW_CLOSED, es + (int32_t)eh * 3600);
-                s_eat_complete_fired = false;
-            }
-            vibes_short_pulse();
-            break;
-
-        case FAST_STATE_EATING:
-            eating_window_restart_fast();
-            notify_cancel_all_fasting();
-            {
-                int32_t st = storage_get_fast_started_at();
-                uint8_t th = storage_get_fast_target_hours();
-                notify_schedule_fast_milestones(st, th);
-                s_fast_complete_fired = false;
-            }
-            vibes_short_pulse();
-            break;
-
-        case FAST_STATE_OMAD:
-            log_meal();
-            notify_cancel_event(NOTIFY_OMAD_TARGET);
-            notify_schedule(NOTIFY_OMAD_TARGET,
-                            storage_get_omad_last_meal_at() + 23 * 3600);
-            vibes_short_pulse();
-            break;
+    if (fasting_select()) {
+        // A new fast or eating window starts; let its overtime log fire again.
+        s_fast_complete_fired = false;
+        s_eat_complete_fired  = false;
+        vibes_short_pulse();
     }
-    (void)p;
     ui_fast_refresh();
 }
 

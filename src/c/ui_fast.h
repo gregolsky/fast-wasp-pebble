@@ -1,14 +1,6 @@
 #pragma once
 
 #include <pebble.h>
-#include "notify.h"
-
-typedef enum {
-    FAST_STATE_READY,
-    FAST_STATE_ACTIVE,
-    FAST_STATE_EATING,
-    FAST_STATE_OMAD,
-} FastUIState;
 
 // Push (or replace) the main fast window.
 void ui_fast_push(void);

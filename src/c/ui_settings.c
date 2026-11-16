@@ -4,7 +4,7 @@
 #include "ui_settings.h"
 #include "version.h"
 #include "storage.h"
-#include "notify.h"
+#include "fasting.h"
 
 #include <pebble.h>
 #include <stdio.h>
@@ -64,8 +64,7 @@ static void on_select(MenuLayer *ml, MenuIndex *idx, void *ctx) {
             break;
         case ROW_RESET:
             if (s_confirm_reset) {
-                notify_cancel_all_fasting();
-                storage_reset_all();
+                fasting_reset_all();
                 APP_LOG(APP_LOG_LEVEL_INFO, "storage-reset");
                 window_stack_pop_all(true);
             } else {

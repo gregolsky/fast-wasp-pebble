@@ -3,6 +3,7 @@
 
 #include "fasting.h"
 #include "storage.h"
+#include "notify.h"
 #include "platform/persist.h"
 #include "platform/time.h"
 
@@ -17,7 +18,7 @@ const Program PROGRAMS[NUM_PROGRAMS] = {
     { "16:8",  "Hunter Wasp",   16,  8, false },
     { "18:6",  "Soldier Wasp",  18,  6, false },
     { "20:4",  "Warrior Wasp",  20,  4, false },
-    { "OMAD",  "Warrior Queen", 23,  1, true  },
+    { "OMAD",  "Warrior Queen", OMAD_HOURS, 1, true  },
 };
 
 const Program *program_by_index(uint8_t idx) {
@@ -129,12 +130,81 @@ void log_meal(void) {
 
     if (prev != 0) {
         int32_t  actual_sec   = now - prev;
-        int32_t  target_sec   = 23 * 3600;
+        int32_t  target_sec   = OMAD_HOURS * 3600;
         int32_t  overtime_sec = actual_sec > target_sec ? actual_sec - target_sec : 0;
         storage_record_fast(actual_sec, overtime_sec);
     }
 
     storage_set_omad_last_meal_at(now);
+}
+
+// ── State + user actions ──────────────────────────────────────────────────────
+
+FastState fasting_state(void) {
+    uint8_t prog = storage_get_program_id();
+    if (prog == NO_PROGRAM) return FAST_STATE_READY;
+    if (program_by_index(prog)->is_omad) {
+        return storage_get_omad_last_meal_at() != 0 ? FAST_STATE_OMAD : FAST_STATE_READY;
+    }
+    if (storage_get_fast_started_at() != 0) return FAST_STATE_ACTIVE;
+    if (storage_get_eat_started_at()  != 0) return FAST_STATE_EATING;
+    return FAST_STATE_READY;
+}
+
+static void schedule_fast_alerts(void) {
+    notify_schedule_fast_milestones(storage_get_fast_started_at(),
+                                    storage_get_fast_target_hours());
+}
+
+bool fasting_select(void) {
+    uint8_t prog = storage_get_program_id();
+    if (prog == NO_PROGRAM) return false;
+
+    switch (fasting_state()) {
+        case FAST_STATE_READY:
+            if (program_by_index(prog)->is_omad) {
+                log_meal();
+            } else {
+                start_fast(prog);
+                schedule_fast_alerts();
+            }
+            break;
+
+        case FAST_STATE_ACTIVE:
+            stop_fast();
+            notify_cancel_all_fasting();
+            if (storage_get_eat_started_at() != 0) {
+                notify_schedule(NOTIFY_EAT_WINDOW_CLOSED,
+                                storage_get_eat_started_at() +
+                                (int32_t)storage_get_eat_target_hours() * 3600);
+            }
+            break;
+
+        case FAST_STATE_EATING:
+            eating_window_restart_fast();
+            schedule_fast_alerts(); // cancels the eat-window alert too
+            break;
+
+        case FAST_STATE_OMAD:
+            log_meal();
+            notify_schedule(NOTIFY_OMAD_TARGET,
+                            storage_get_omad_last_meal_at() + OMAD_HOURS * 3600);
+            break;
+    }
+    return true;
+}
+
+void fasting_choose_program(uint8_t idx) {
+    storage_set_program_id(idx);
+    storage_set_fast_started_at(0);
+    storage_set_eat_started_at(0);
+    storage_set_omad_last_meal_at(0);
+    notify_cancel_all_fasting();
+}
+
+void fasting_reset_all(void) {
+    notify_cancel_all_fasting();
+    storage_reset_all();
 }
 
 // ── Stats ─────────────────────────────────────────────────────────────────────

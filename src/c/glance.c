@@ -11,32 +11,23 @@
 // Templates are evaluated by the launcher, so the countdown stays live
 // and flips to the "done" text without waking the app.
 bool glance_subtitle(char *buf, size_t len) {
-    uint8_t prog = storage_get_program_id();
-    if (prog == 0xFF) return false;
-
-    if (program_by_index(prog)->is_omad) {
-        int32_t meal = storage_get_omad_last_meal_at();
-        if (meal == 0) return false;
-        snprintf(buf, len, "{time_since(%ld)|format(>=1d:'Over a day since meal','%%aR since meal')}", (long)meal);
-        return true;
-    }
-
-    int32_t fast = storage_get_fast_started_at();
-    if (fast != 0) {
-        long end = (long)fast + (long)storage_get_fast_target_hours() * 3600;
-        snprintf(buf, len,
-                 "{time_until(%ld)|format(>0S:'Fast ends in %%aR','Fast done! Open to eat')}",
-                 end);
-        return true;
-    }
-
-    int32_t eat = storage_get_eat_started_at();
-    if (eat != 0) {
-        long end = (long)eat + (long)storage_get_eat_target_hours() * 3600;
-        snprintf(buf, len,
-                 "{time_until(%ld)|format(>0S:'Eat window: %%aR left','Eat window over')}",
-                 end);
-        return true;
+    switch (fasting_state()) {
+        case FAST_STATE_OMAD:
+            snprintf(buf, len, "{time_since(%ld)|format(>=1d:'Over a day since meal','%%aR since meal')}",
+                     (long)storage_get_omad_last_meal_at());
+            return true;
+        case FAST_STATE_ACTIVE:
+            snprintf(buf, len,
+                     "{time_until(%ld)|format(>0S:'Fast ends in %%aR','Fast done! Open to eat')}",
+                     (long)storage_get_fast_started_at() + (long)storage_get_fast_target_hours() * 3600);
+            return true;
+        case FAST_STATE_EATING:
+            snprintf(buf, len,
+                     "{time_until(%ld)|format(>0S:'Eat window: %%aR left','Eat window over')}",
+                     (long)storage_get_eat_started_at() + (long)storage_get_eat_target_hours() * 3600);
+            return true;
+        case FAST_STATE_READY:
+            break;
     }
     return false;
 }

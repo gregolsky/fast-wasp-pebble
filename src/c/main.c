@@ -36,7 +36,7 @@ static void app_init(void) {
     APP_LOG(APP_LOG_LEVEL_INFO, "app-version:" APP_VERSION);
     handle_wakeup_on_launch();
 
-    if (storage_get_program_id() == 0xFF) {
+    if (storage_get_program_id() == NO_PROGRAM) {
         APP_LOG(APP_LOG_LEVEL_INFO, "state-picker");
         ui_picker_push(on_first_program_selected);
     } else {
