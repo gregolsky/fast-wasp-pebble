@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.12.0] — 2026-11-16
+
+### 🐛 Fixed
+- **OMAD**: the 23h meal-time alert is now scheduled after the first logged meal too (before, only from the second meal on)
+
+### 🔧 Internal
+- Fasting state and SELECT/program/reset actions moved into the domain layer, with unit tests for each transition
+
+---
+
 ## [1.11.0] — 2026-11-15
 
 ### ✨ Added

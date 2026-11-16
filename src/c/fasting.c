@@ -151,6 +151,12 @@ FastState fasting_state(void) {
     return FAST_STATE_READY;
 }
 
+static void log_meal_and_schedule_target(void) {
+    log_meal();
+    notify_schedule(NOTIFY_OMAD_TARGET,
+                    storage_get_omad_last_meal_at() + OMAD_HOURS * 3600);
+}
+
 static void schedule_fast_alerts(void) {
     notify_schedule_fast_milestones(storage_get_fast_started_at(),
                                     storage_get_fast_target_hours());
@@ -163,7 +169,7 @@ bool fasting_select(void) {
     switch (fasting_state()) {
         case FAST_STATE_READY:
             if (program_by_index(prog)->is_omad) {
-                log_meal();
+                log_meal_and_schedule_target();
             } else {
                 start_fast(prog);
                 schedule_fast_alerts();
@@ -186,9 +192,7 @@ bool fasting_select(void) {
             break;
 
         case FAST_STATE_OMAD:
-            log_meal();
-            notify_schedule(NOTIFY_OMAD_TARGET,
-                            storage_get_omad_last_meal_at() + OMAD_HOURS * 3600);
+            log_meal_and_schedule_target();
             break;
     }
     return true;

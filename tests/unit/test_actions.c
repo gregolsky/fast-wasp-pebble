@@ -48,6 +48,13 @@ void test_select_from_eating_restarts_fast(void) {
     TEST_ASSERT_EQUAL_INT(g_now + 16 * H, notify_stub_target_for(NOTIFY_FAST_COMPLETE));
 }
 
+void test_select_omad_first_meal_schedules_target(void) {
+    actions_setup(5);
+    fasting_select(); // first meal, from READY
+    TEST_ASSERT_EQUAL(FAST_STATE_OMAD, fasting_state());
+    TEST_ASSERT_EQUAL_INT(g_now + OMAD_HOURS * H, notify_stub_target_for(NOTIFY_OMAD_TARGET));
+}
+
 void test_select_omad_second_meal_schedules_target(void) {
     actions_setup(5);
     fasting_select(); // first meal
