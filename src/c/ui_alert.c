@@ -6,20 +6,23 @@
 #include <pebble.h>
 #include <stdio.h>
 
+#define ICON_SIZE 48
+
 typedef struct {
     const char *title;
     const char *body;
     const char *hint; // NULL for milestone events
+    uint32_t    icon; // resource id
 } AlertCopy;
 
 static const AlertCopy COPY[NOTIFY_EVENT_COUNT] = {
-    [NOTIFY_FAST_COMPLETE]     = { "Sting!",    "You did it. Fast complete.",   "SELECT \xe2\x86\x92 eat"      },
-    [NOTIFY_EAT_WINDOW_CLOSED] = { "Hive shut", "Eat window closed. Reset.",    "SELECT \xe2\x86\x92 fast"     },
-    [NOTIFY_OMAD_TARGET]       = { "OMAD",       "23h. Meal time.",              "SELECT \xe2\x86\x92 log meal" },
-    [NOTIFY_FAST_HALFWAY]      = { "Halfway",    "You've got this. Keep flying.", NULL                          },
-    [NOTIFY_FAST_1H_LEFT]      = { "60 min",     "One hour. Don't blink.",       NULL                          },
-    [NOTIFY_KETOSIS_START]     = { "Ketosis",    "Fat is fuel. Stay sharp.",     NULL                          },
-    [NOTIFY_AUTOPHAGY_START]   = { "Autophagy",  "Deep work. Cells clearing.",   NULL                          },
+    [NOTIFY_FAST_COMPLETE]     = { "Sting!",    "You did it. Fast complete.",   "SELECT \xe2\x86\x92 eat",      RESOURCE_ID_IMAGE_ALERT_TROPHY    },
+    [NOTIFY_EAT_WINDOW_CLOSED] = { "Hive shut", "Eat window closed. Reset.",    "SELECT \xe2\x86\x92 fast",     RESOURCE_ID_IMAGE_ALERT_LOCK      },
+    [NOTIFY_OMAD_TARGET]       = { "OMAD",       "23h. Meal time.",              "SELECT \xe2\x86\x92 log meal", RESOURCE_ID_IMAGE_ALERT_PLATE     },
+    [NOTIFY_FAST_HALFWAY]      = { "Halfway",    "You've got this. Keep flying.", NULL,                          RESOURCE_ID_IMAGE_ALERT_MUSCLE    },
+    [NOTIFY_FAST_1H_LEFT]      = { "60 min",     "One hour. Don't blink.",       NULL,                          RESOURCE_ID_IMAGE_ALERT_HOURGLASS },
+    [NOTIFY_KETOSIS_START]     = { "Ketosis",    "Fat is fuel. Stay sharp.",     NULL,                          RESOURCE_ID_IMAGE_ALERT_FLAME     },
+    [NOTIFY_AUTOPHAGY_START]   = { "Autophagy",  "Deep work. Cells clearing.",   NULL,                          RESOURCE_ID_IMAGE_ALERT_SPARKLES  },
 };
 
 // ── Window state ──────────────────────────────────────────────────────────────
@@ -28,6 +31,8 @@ static Window    *s_window;
 static TextLayer *s_title_layer;
 static TextLayer *s_body_layer;
 static TextLayer *s_hint_layer;
+static BitmapLayer *s_icon_layer;
+static GBitmap     *s_icon;
 #ifdef PBL_COLOR
 static Layer     *s_header_layer;
 #endif
@@ -73,7 +78,7 @@ static void window_load(Window *win) {
     text_layer_set_text_alignment(s_title_layer, align);
     layer_add_child(root, text_layer_get_layer(s_title_layer));
 
-    s_body_layer = text_layer_create(GRect(inset, header_h + 6, bounds.size.w - 2 * inset, bounds.size.h - header_h - 30));
+    int body_y = header_h + 6;
 #else
     s_title_layer = text_layer_create(GRect(inset, 10, bounds.size.w - 2 * inset, 30));
     text_layer_set_background_color(s_title_layer, GColorClear);
@@ -82,8 +87,12 @@ static void window_load(Window *win) {
     text_layer_set_text_alignment(s_title_layer, align);
     layer_add_child(root, text_layer_get_layer(s_title_layer));
 
-    s_body_layer = text_layer_create(GRect(inset, 44, bounds.size.w - 2 * inset, bounds.size.h - 66));
+    int body_y = 44;
 #endif
+    // Icon sits just above the hint line; the body text fills the gap above it.
+    int hint_y = bounds.size.h - PBL_IF_ROUND_ELSE(34, 20);
+    int icon_y = hint_y - ICON_SIZE - 4;
+    s_body_layer = text_layer_create(GRect(inset, body_y, bounds.size.w - 2 * inset, icon_y - body_y));
     text_layer_set_background_color(s_body_layer, GColorClear);
     text_layer_set_text_color(s_body_layer, GColorLightGray);
     text_layer_set_font(s_body_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
@@ -91,7 +100,11 @@ static void window_load(Window *win) {
     text_layer_set_overflow_mode(s_body_layer, GTextOverflowModeWordWrap);
     layer_add_child(root, text_layer_get_layer(s_body_layer));
 
-    s_hint_layer = text_layer_create(GRect(inset, bounds.size.h - PBL_IF_ROUND_ELSE(34, 20), bounds.size.w - 2 * inset, 18));
+    s_icon_layer = bitmap_layer_create(GRect((bounds.size.w - ICON_SIZE) / 2, icon_y, ICON_SIZE, ICON_SIZE));
+    bitmap_layer_set_compositing_mode(s_icon_layer, GCompOpSet);
+    layer_add_child(root, bitmap_layer_get_layer(s_icon_layer));
+
+    s_hint_layer = text_layer_create(GRect(inset, hint_y, bounds.size.w - 2 * inset, 18));
     text_layer_set_background_color(s_hint_layer, GColorClear);
     text_layer_set_text_color(s_hint_layer, GColorDarkGray);
     text_layer_set_font(s_hint_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
@@ -106,6 +119,9 @@ static void window_unload(Window *win) {
     text_layer_destroy(s_title_layer);
     text_layer_destroy(s_body_layer);
     text_layer_destroy(s_hint_layer);
+    bitmap_layer_destroy(s_icon_layer);
+    gbitmap_destroy(s_icon);
+    s_icon = NULL;
 #ifdef PBL_COLOR
     layer_destroy(s_header_layer);
 #endif
@@ -118,6 +134,7 @@ static void window_unload(Window *win) {
 void ui_alert_push(NotifyEvent event) {
     if ((int)event >= NOTIFY_EVENT_COUNT) return;
     const AlertCopy *c = &COPY[(int)event];
+    APP_LOG(APP_LOG_LEVEL_INFO, "alert:%d", (int)event);
 
     s_window = window_create();
     window_set_window_handlers(s_window, (WindowHandlers){
@@ -129,4 +146,6 @@ void ui_alert_push(NotifyEvent event) {
     text_layer_set_text(s_title_layer, c->title);
     text_layer_set_text(s_body_layer,  c->body);
     text_layer_set_text(s_hint_layer,  c->hint ? c->hint : "");
+    s_icon = gbitmap_create_with_resource(c->icon);
+    bitmap_layer_set_bitmap(s_icon_layer, s_icon);
 }

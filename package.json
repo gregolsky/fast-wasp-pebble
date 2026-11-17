@@ -1,7 +1,7 @@
 {
   "name": "fast-pebble",
   "author": "Grzegorz Lachowski",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "keywords": ["pebble-app", "fasting", "health", "timer"],
   "private": true,
   "dependencies": {},
@@ -24,7 +24,14 @@
     "resources": {
       "media": [
         { "type": "png", "name": "IMAGE_MENU_ICON",
-          "file": "images/menu_icon_color.png", "menuIcon": true }
+          "file": "images/menu_icon_color.png", "menuIcon": true },
+        { "type": "bitmap", "name": "IMAGE_ALERT_TROPHY", "file": "images/alert_trophy.png" },
+        { "type": "bitmap", "name": "IMAGE_ALERT_MUSCLE", "file": "images/alert_muscle.png" },
+        { "type": "bitmap", "name": "IMAGE_ALERT_HOURGLASS", "file": "images/alert_hourglass.png" },
+        { "type": "bitmap", "name": "IMAGE_ALERT_FLAME", "file": "images/alert_flame.png" },
+        { "type": "bitmap", "name": "IMAGE_ALERT_SPARKLES", "file": "images/alert_sparkles.png" },
+        { "type": "bitmap", "name": "IMAGE_ALERT_PLATE", "file": "images/alert_plate.png" },
+        { "type": "bitmap", "name": "IMAGE_ALERT_LOCK", "file": "images/alert_lock.png" }
       ]
     }
   }

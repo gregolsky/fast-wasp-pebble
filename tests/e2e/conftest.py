@@ -51,14 +51,21 @@ class PebbleEmulator:
         self._clear_emulator_state()
         pbw = _find_pbw()
         for attempt in range(6):
-            result = subprocess.run(
-                ["pebble", "install", "--emulator", self.platform, pbw],
-                capture_output=True, text=True
-            )
-            if result.returncode == 0:
-                break
-            print(f"[install attempt {attempt} rc={result.returncode}]: {(result.stderr or result.stdout)[:300]}", flush=True)
-            time.sleep(1)
+            try:
+                result = subprocess.run(
+                    ["pebble", "install", "--emulator", self.platform, pbw],
+                    capture_output=True, text=True, timeout=120
+                )
+                if result.returncode == 0:
+                    break
+                why = f"rc={result.returncode}: {(result.stderr or result.stdout)[:300]}"
+            except subprocess.TimeoutExpired:
+                why = "timed out"
+            # A half-booted QEMU hangs or refuses connections forever; restart it.
+            print(f"[install attempt {attempt} {why}]", flush=True)
+            subprocess.run(["pebble", "kill", "--force"], capture_output=True, timeout=30)
+            self._clear_emulator_state()
+            time.sleep(3)
         else:
             raise RuntimeError("pebble install failed after 6 attempts")
         subprocess.run(["pebble", "wipe"], capture_output=True)
@@ -97,6 +104,23 @@ class PebbleEmulator:
         for _ in range(idx):
             self.press("down")
         self.press("select")
+
+    # ── Clock ─────────────────────────────────────────────────────────────────
+
+    def set_time(self, unix_s):
+        """Jump the emulated watch clock to unix_s (UTC seconds)."""
+        subprocess.run(["pebble", "emu-set-time", "--emulator", self.platform,
+                        str(int(unix_s))], check=True, capture_output=True, timeout=60)
+
+    def jump_to_just_before(self, target_unix_s, lead_s=10):
+        """Wakeups the clock jumps *past* are dropped as missed, so land just
+        before the target and let the firmware tick into it."""
+        self.set_time(target_unix_s - lead_s)
+
+    def clear_logs(self):
+        self._log_hist.clear()
+        while not self._log_q.empty():
+            self._log_q.get_nowait()
 
     # ── Observation ──────────────────────────────────────────────────────────
 
