@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.15.0] — 2026-11-18
+
+- Reminder pin enhancements
+
+---
+
 ## [1.14.0] — 2026-11-18
 
 ### ✨ Added

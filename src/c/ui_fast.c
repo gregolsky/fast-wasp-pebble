@@ -5,7 +5,7 @@
 #include "ui_picker.h"
 #include "ui_stats.h"
 #include "ui_settings.h"
-#include "ui_sync.h"
+#include "pins.h"
 #include "notify.h"
 #include "fasting.h"
 #include "storage.h"
@@ -247,11 +247,41 @@ static void click_down_short(ClickRecognizerRef r, void *ctx) {
     ui_settings_push();
 }
 
-// Leaving drops the phone's script, so first make sure it has the alert times.
+// Leaving stops the phone's script, so give it a moment to store the alert
+// times first. Unsynced pins are fixed on the next launch near the phone.
+#define EXIT_WAIT_MS 2000
+
+static AppTimer *s_exit_timer;
+
+static void exit_now(void *ctx) {
+    (void)ctx;
+    if (s_exit_timer) app_timer_cancel(s_exit_timer);
+    s_exit_timer = NULL;
+    pins_when_synced(NULL);
+    window_stack_pop_all(true);
+}
+
+static void exit_after_wait(void *ctx) {
+    s_exit_timer = NULL;
+    APP_LOG(APP_LOG_LEVEL_WARNING, "sync-failed");
+    exit_now(ctx);
+}
+
+static void on_exit_synced(void) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "sync-done");
+    exit_now(NULL);
+}
+
 static void click_back(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
-    if (notify_pins_in_sync()) window_stack_pop(true);
-    else ui_sync_push();
+    if (s_exit_timer) return; // already leaving
+    if (notify_pins_in_sync() || !connection_service_peek_pebble_app_connection()) {
+        window_stack_pop(true);
+        return;
+    }
+    APP_LOG(APP_LOG_LEVEL_INFO, "sync-wait");
+    s_exit_timer = app_timer_register(EXIT_WAIT_MS, exit_after_wait, NULL);
+    pins_when_synced(on_exit_synced);
 }
 
 static void click_config(void *ctx) {
