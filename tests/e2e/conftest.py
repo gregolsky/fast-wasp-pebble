@@ -18,8 +18,8 @@ def _find_pbw():
 
 
 def pytest_addoption(parser):
-    parser.addoption("--platform", default=PLATFORM, choices=["basalt"],
-                     help="Pebble platform (basalt only; diorite/emery QEMU broken)")
+    parser.addoption("--platform", default=PLATFORM, choices=["basalt", "gabbro", "emery", "diorite", "flint"],
+                     help="Pebble platform (suite is tuned for basalt; others for screenshots)")
 
 
 @pytest.fixture(scope="session")
@@ -33,6 +33,7 @@ class PebbleEmulator:
         self._log_proc = None
         self._log_q    = queue.Queue()
         self._log_hist = []
+        self._clock_offset = 0.0  # emulator time minus host time
         os.makedirs(ARTIFACT_DIR, exist_ok=True)
 
     # ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -111,6 +112,11 @@ class PebbleEmulator:
         """Jump the emulated watch clock to unix_s (UTC seconds)."""
         subprocess.run(["pebble", "emu-set-time", "--emulator", self.platform,
                         str(int(unix_s))], check=True, capture_output=True, timeout=60)
+        self._clock_offset = unix_s - time.time()
+
+    def emu_now(self):
+        """Current emulator time (it starts at host time; set_time shifts it)."""
+        return time.time() + self._clock_offset
 
     def jump_to_just_before(self, target_unix_s, lead_s=10):
         """Wakeups the clock jumps *past* are dropped as missed, so land just

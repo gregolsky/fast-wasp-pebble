@@ -6,8 +6,6 @@
 #include <pebble.h>
 #include <stdio.h>
 
-#define ICON_SIZE 48
-
 typedef struct {
     const char *title;
     const char *body;
@@ -33,6 +31,7 @@ static TextLayer *s_body_layer;
 static TextLayer *s_hint_layer;
 static BitmapLayer *s_icon_layer;
 static GBitmap     *s_icon;
+static const AlertCopy *s_copy;
 #ifdef PBL_COLOR
 static Layer     *s_header_layer;
 #endif
@@ -76,6 +75,7 @@ static void window_load(Window *win) {
     text_layer_set_text_color(s_title_layer, GColorBlack);
     text_layer_set_font(s_title_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
     text_layer_set_text_alignment(s_title_layer, align);
+    text_layer_set_text(s_title_layer, s_copy->title);
     layer_add_child(root, text_layer_get_layer(s_title_layer));
 
     int body_y = header_h + 6;
@@ -85,14 +85,18 @@ static void window_load(Window *win) {
     text_layer_set_text_color(s_title_layer, GColorWhite);
     text_layer_set_font(s_title_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
     text_layer_set_text_alignment(s_title_layer, align);
+    text_layer_set_text(s_title_layer, s_copy->title);
     layer_add_child(root, text_layer_get_layer(s_title_layer));
 
     int body_y = 44;
 #endif
-    // Icon sits just above the hint line; the body text fills the gap above it.
-    int hint_y = bounds.size.h - PBL_IF_ROUND_ELSE(34, 20);
-    int icon_y = hint_y - ICON_SIZE - 4;
-    s_body_layer = text_layer_create(GRect(inset, body_y, bounds.size.w - 2 * inset, icon_y - body_y));
+    // Round: lift the hint out of the narrow bottom of the circle.
+    int hint_y = bounds.size.h - PBL_IF_ROUND_ELSE(46, 20);
+    // Icon size comes from the per-platform resource (see tools/gen_alert_icons.py).
+    GSize icon = gbitmap_get_bounds(s_icon).size;
+    int icon_max_y = hint_y - icon.h - 4;
+    s_body_layer = text_layer_create(GRect(inset, body_y, bounds.size.w - 2 * inset, icon_max_y - body_y));
+    text_layer_set_text(s_body_layer, s_copy->body);
     text_layer_set_background_color(s_body_layer, GColorClear);
     text_layer_set_text_color(s_body_layer, GColorLightGray);
     text_layer_set_font(s_body_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
@@ -100,13 +104,19 @@ static void window_load(Window *win) {
     text_layer_set_overflow_mode(s_body_layer, GTextOverflowModeWordWrap);
     layer_add_child(root, text_layer_get_layer(s_body_layer));
 
-    s_icon_layer = bitmap_layer_create(GRect((bounds.size.w - ICON_SIZE) / 2, icon_y, ICON_SIZE, ICON_SIZE));
+    // Centre the icon in the gap between the wrapped body text and the hint.
+    int text_bottom = body_y + text_layer_get_content_size(s_body_layer).h;
+    int icon_y = text_bottom + (icon_max_y - text_bottom) / 2;
+    s_icon_layer = bitmap_layer_create(GRect((bounds.size.w - icon.w) / 2, icon_y, icon.w, icon.h));
     bitmap_layer_set_compositing_mode(s_icon_layer, GCompOpSet);
+    bitmap_layer_set_bitmap(s_icon_layer, s_icon);
     layer_add_child(root, bitmap_layer_get_layer(s_icon_layer));
 
     s_hint_layer = text_layer_create(GRect(inset, hint_y, bounds.size.w - 2 * inset, 18));
     text_layer_set_background_color(s_hint_layer, GColorClear);
-    text_layer_set_text_color(s_hint_layer, GColorDarkGray);
+    // DarkGray is black on 1-bit screens, which hid the hint there.
+    text_layer_set_text_color(s_hint_layer, PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+    text_layer_set_text(s_hint_layer, s_copy->hint ? s_copy->hint : "");
     text_layer_set_font(s_hint_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
     text_layer_set_text_alignment(s_hint_layer, align);
     layer_add_child(root, text_layer_get_layer(s_hint_layer));
@@ -133,19 +143,14 @@ static void window_unload(Window *win) {
 
 void ui_alert_push(NotifyEvent event) {
     if ((int)event >= NOTIFY_EVENT_COUNT) return;
-    const AlertCopy *c = &COPY[(int)event];
+    s_copy = &COPY[(int)event];
     APP_LOG(APP_LOG_LEVEL_INFO, "alert:%d", (int)event);
 
+    s_icon = gbitmap_create_with_resource(s_copy->icon); // window_load needs its size
     s_window = window_create();
     window_set_window_handlers(s_window, (WindowHandlers){
         .load   = window_load,
         .unload = window_unload,
     });
     window_stack_push(s_window, true);
-
-    text_layer_set_text(s_title_layer, c->title);
-    text_layer_set_text(s_body_layer,  c->body);
-    text_layer_set_text(s_hint_layer,  c->hint ? c->hint : "");
-    s_icon = gbitmap_create_with_resource(c->icon);
-    bitmap_layer_set_bitmap(s_icon_layer, s_icon);
 }

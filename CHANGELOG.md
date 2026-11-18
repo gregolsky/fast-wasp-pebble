@@ -3,10 +3,15 @@
 ## [1.13.0] — 2026-11-17
 
 ### ✨ Added
-- **Alert icons**: every alert shows a pixel-art emoji — 💪 halfway, ⏳ 1h left, 🔥 ketosis, ✨ autophagy, 🏆 fast complete, 🍽️ OMAD meal time, 🔒 eat window closed (white versions on black-and-white watches)
+- **Alert icons**: every alert shows a picture — half-filled circle for halfway, hourglass for 1h left, flame for ketosis, recycling arrows for autophagy, trophy for fast complete, plate and cutlery for OMAD meal time, padlock for eat window closed. Each watch gets its own size (larger on Time 2 and Round 2) and a black-and-white version on 1-bit screens; the icon sits centred between the text and the hint
+
+### 🐛 Fixed
+- **Black-and-white watches**: the "SELECT → eat/fast/log meal" hint on alerts was invisible (dark grey renders black)
+- **Round watches**: the alert hint moved up, out of the narrow bottom of the screen
 
 ### 🔧 Tooling
 - E2E tests now fire real wakeups: `pebble emu-set-time` jumps the emulator clock to just before an alert (jumping past it drops the wakeup as missed). Covers halfway, fast complete, milestones off, OMAD first meal and app relaunch — no skipped tests left
+- `test_alert_screens.py` fires all seven alerts on each platform and screenshots them
 - E2E fixture restarts the emulator when `pebble install` hangs or is refused
 - `tools/gen_alert_icons.py` regenerates the icons (standard library only)
 
