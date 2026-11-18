@@ -151,15 +151,25 @@ FastState fasting_state(void) {
     return FAST_STATE_READY;
 }
 
-static void log_meal_and_schedule_target(void) {
-    log_meal();
+static void schedule_omad_alert(void) {
     notify_schedule(NOTIFY_OMAD_TARGET,
                     storage_get_omad_last_meal_at() + OMAD_HOURS * 3600);
+}
+
+static void log_meal_and_schedule_target(void) {
+    log_meal();
+    schedule_omad_alert();
 }
 
 static void schedule_fast_alerts(void) {
     notify_schedule_fast_milestones(storage_get_fast_started_at(),
                                     storage_get_fast_target_hours());
+}
+
+static void schedule_eat_alert(void) {
+    notify_schedule(NOTIFY_EAT_WINDOW_CLOSED,
+                    storage_get_eat_started_at() +
+                    (int32_t)storage_get_eat_target_hours() * 3600);
 }
 
 bool fasting_select(void) {
@@ -179,11 +189,7 @@ bool fasting_select(void) {
         case FAST_STATE_ACTIVE:
             stop_fast();
             notify_cancel_all_fasting();
-            if (storage_get_eat_started_at() != 0) {
-                notify_schedule(NOTIFY_EAT_WINDOW_CLOSED,
-                                storage_get_eat_started_at() +
-                                (int32_t)storage_get_eat_target_hours() * 3600);
-            }
+            if (storage_get_eat_started_at() != 0) schedule_eat_alert();
             break;
 
         case FAST_STATE_EATING:
@@ -204,6 +210,17 @@ void fasting_choose_program(uint8_t idx) {
     storage_set_eat_started_at(0);
     storage_set_omad_last_meal_at(0);
     notify_cancel_all_fasting();
+}
+
+void fasting_restore_alerts(void) {
+    notify_cancel_all_wakeups();
+    notify_cancel_all_fasting();
+    switch (fasting_state()) {
+        case FAST_STATE_ACTIVE: schedule_fast_alerts(); break;
+        case FAST_STATE_EATING: schedule_eat_alert();   break;
+        case FAST_STATE_OMAD:   schedule_omad_alert();  break;
+        case FAST_STATE_READY:  break;
+    }
 }
 
 void fasting_reset_all(void) {

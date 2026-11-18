@@ -10,6 +10,7 @@
 
 // The phone (src/pkjs/index.js) turns the alert times into timeline pins.
 // The whole table is sent each time, so a lost message is fixed by the next.
+// The phone echoes it back once stored (SYNCED); that is what counts as synced.
 
 #define RETRY_MS     2000
 #define MAX_RETRIES  5
@@ -19,6 +20,7 @@ static bool      s_sending;
 static bool      s_pending;
 static int       s_retries;
 static AppTimer *s_timer;
+static void    (*s_synced_cb)(void);
 
 static void kick(uint32_t ms);
 
@@ -27,11 +29,8 @@ static void send_now(void *ctx) {
     s_timer = NULL;
     if (!s_js_ready || s_sending || !s_pending) return;
 
-    bool pins_on = !storage_get_full_screen_alerts();
     int32_t at[NOTIFY_EVENT_COUNT];
-    for (int e = 0; e < NOTIFY_EVENT_COUNT; e++) {
-        at[e] = pins_on ? storage_get_alert_at((uint8_t)e) : 0;
-    }
+    notify_pin_times(at);
 
     DictionaryIterator *it;
     if (app_message_outbox_begin(&it) != APP_MSG_OK) { kick(RETRY_MS); return; }
@@ -68,6 +67,15 @@ static void on_received(DictionaryIterator *it, void *ctx) {
         s_js_ready = true;
         pins_sync(); // resync on every launch
     }
+    // The phone echoes the times it has stored as pins.
+    Tuple *t = dict_find(it, MESSAGE_KEY_SYNCED);
+    int32_t at[NOTIFY_EVENT_COUNT];
+    if (t && t->type == TUPLE_BYTE_ARRAY && t->length == sizeof(at)) {
+        memcpy(at, t->value->data, sizeof(at));
+        for (int e = 0; e < NOTIFY_EVENT_COUNT; e++) storage_set_pin_sent((uint8_t)e, at[e]);
+        APP_LOG(APP_LOG_LEVEL_INFO, "pins-confirmed");
+        if (s_synced_cb && notify_pins_in_sync()) s_synced_cb();
+    }
 }
 
 void pins_init(void) {
@@ -80,4 +88,9 @@ void pins_init(void) {
 void pins_sync(void) {
     s_pending = true;
     kick(50); // coalesce a burst of schedule/cancel calls into one message
+}
+
+void pins_when_synced(void (*cb)(void)) {
+    s_synced_cb = cb;
+    if (cb) pins_sync();
 }

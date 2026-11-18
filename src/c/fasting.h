@@ -46,6 +46,10 @@ void fasting_choose_program(uint8_t idx);
 // Wipe all data and cancel every alert.
 void fasting_reset_all(void);
 
+// Rebuild every alert from the saved state (call on launch). Clears wakeups
+// the app lost track of, e.g. after an uninstall wiped its storage.
+void fasting_restore_alerts(void);
+
 // ── Timer arithmetic ──────────────────────────────────────────────────────────
 
 // Seconds elapsed since started_at (epoch seconds).

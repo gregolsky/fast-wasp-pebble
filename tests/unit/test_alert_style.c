@@ -84,12 +84,3 @@ void test_reset_all_restores_timeline_style(void) {
     TEST_ASSERT_FALSE(storage_get_full_screen_alerts());
     TEST_ASSERT_EQUAL_INT(0, storage_get_alert_at(NOTIFY_FAST_COMPLETE));
 }
-
-void test_switch_style_keeps_wakeups_from_before_upgrade(void) {
-    style_setup();
-    storage_set_full_screen_alerts(true);
-    notify_schedule(NOTIFY_FAST_COMPLETE, T0 + 12 * H);
-    storage_set_alert_at(NOTIFY_FAST_COMPLETE, 0); // as stored by v1.13
-    notify_set_full_screen(false);
-    TEST_ASSERT_TRUE(notify_stub_is_scheduled(NOTIFY_FAST_COMPLETE));
-}

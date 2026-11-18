@@ -1,11 +1,12 @@
 """E2E fixture for Fast Pebble. Run inside Docker: see run-e2e.sh."""
-import subprocess, time, threading, queue, os, glob, shutil, pytest
+import subprocess, time, threading, queue, os, glob, shutil, json, pytest
 
 PLATFORM     = "basalt"
 _pebble_bin  = shutil.which("pebble")
 SDK_PY       = (os.path.join(os.path.dirname(_pebble_bin), "python3")
                 if _pebble_bin else "python3")
 DRIVER       = os.path.join(os.path.dirname(__file__), "driver.py")
+UNINSTALL    = os.path.join(os.path.dirname(__file__), "uninstall.py")
 ARTIFACT_DIR = os.path.join(os.path.dirname(__file__), "_artifacts")
 ROOT_DIR     = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -87,11 +88,18 @@ class PebbleEmulator:
         self._clear_emulator_state()
         time.sleep(5)  # wait for QEMU to release ports before next test
 
-    def reinstall(self):
+    def reinstall(self, settle_s=2):
         """Reinstall (relaunch) the app without wiping storage."""
         subprocess.run(["pebble", "install", "--emulator", self.platform,
                         _find_pbw()], capture_output=True)
-        time.sleep(2)
+        time.sleep(settle_s)
+
+    def uninstall(self):
+        """Remove the app from the watch: wipes its storage, keeps its wakeups."""
+        with open(os.path.join(ROOT_DIR, "package.json")) as f:
+            app_uuid = json.load(f)["pebble"]["uuid"]
+        subprocess.run([SDK_PY, UNINSTALL, self.platform, app_uuid], check=True, timeout=60)
+        time.sleep(1)
 
     # ── Input ─────────────────────────────────────────────────────────────────
 

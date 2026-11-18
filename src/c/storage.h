@@ -24,6 +24,8 @@
 // Per-event alert times (0 = none): keys K_ALERT_AT_BASE+0 .. +6
 #define K_ALERT_AT_BASE      22u
 #define K_FULL_SCREEN_ALERTS 29u
+// Pin times the phone last confirmed: keys K_PIN_SENT_BASE+0 .. +6
+#define K_PIN_SENT_BASE      30u
 
 // ── Getters / setters ─────────────────────────────────────────────────────────
 
@@ -62,6 +64,11 @@ void     storage_set_alert_at(uint8_t event, int32_t at);
 // Per-event wakeup ID slots (managed by notify.c).
 int32_t  storage_get_wakeup_id_for_event(uint8_t event);
 void     storage_set_wakeup_id_for_event(uint8_t event, int32_t id);
+
+// Per-event pin time the phone last confirmed (0 = none). Kept on reset_all,
+// since the phone still holds those pins until it is told otherwise.
+int32_t  storage_get_pin_sent(uint8_t event);
+void     storage_set_pin_sent(uint8_t event, int32_t at);
 
 // ── Stats aggregate ───────────────────────────────────────────────────────────
 

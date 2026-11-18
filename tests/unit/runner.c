@@ -69,6 +69,20 @@ void test_stats_accumulates(void);
 void test_stats_longest_tracked(void);
 void test_stats_reset_clears(void);
 
+// test_restore.c
+void test_restore_clears_wakeups_orphaned_by_reinstall(void);
+void test_restore_active_fast_keeps_only_future_alerts(void);
+void test_restore_after_goal_does_not_refire_complete(void);
+void test_restore_eating_reschedules_window_close(void);
+void test_restore_omad_reschedules_meal_alert(void);
+void test_restore_ready_clears_stale_pin_times(void);
+void test_restore_moves_pre_upgrade_wakeups_to_pins(void);
+void test_schedule_in_past_only_cancels(void);
+void test_pins_out_of_sync_until_phone_confirms(void);
+void test_pins_out_of_sync_after_cancel(void);
+void test_full_screen_must_withdraw_sent_pins(void);
+void test_fired_pin_needs_no_withdrawing(void);
+
 // test_alert_style.c
 void test_timeline_is_default_style(void);
 void test_timeline_schedule_syncs_pins_not_wakeups(void);
@@ -169,6 +183,18 @@ int main(void) {
     RUN_TEST(test_stats_longest_tracked);
     RUN_TEST(test_stats_reset_clears);
 
+    RUN_TEST(test_restore_clears_wakeups_orphaned_by_reinstall);
+    RUN_TEST(test_restore_active_fast_keeps_only_future_alerts);
+    RUN_TEST(test_restore_after_goal_does_not_refire_complete);
+    RUN_TEST(test_restore_eating_reschedules_window_close);
+    RUN_TEST(test_restore_omad_reschedules_meal_alert);
+    RUN_TEST(test_restore_ready_clears_stale_pin_times);
+    RUN_TEST(test_restore_moves_pre_upgrade_wakeups_to_pins);
+    RUN_TEST(test_schedule_in_past_only_cancels);
+    RUN_TEST(test_pins_out_of_sync_until_phone_confirms);
+    RUN_TEST(test_pins_out_of_sync_after_cancel);
+    RUN_TEST(test_full_screen_must_withdraw_sent_pins);
+    RUN_TEST(test_fired_pin_needs_no_withdrawing);
     RUN_TEST(test_timeline_is_default_style);
     RUN_TEST(test_timeline_schedule_syncs_pins_not_wakeups);
     RUN_TEST(test_timeline_cancel_clears_alert_and_syncs);
@@ -177,7 +203,6 @@ int main(void) {
     RUN_TEST(test_switch_to_full_screen_moves_only_future_alerts);
     RUN_TEST(test_switch_back_to_timeline_cancels_wakeups_keeps_times);
     RUN_TEST(test_reset_all_restores_timeline_style);
-    RUN_TEST(test_switch_style_keeps_wakeups_from_before_upgrade);
     RUN_TEST(test_wakeup_target_for_16h_fast);
     RUN_TEST(test_cancel_event_clears_storage);
     RUN_TEST(test_schedule_same_event_cancels_previous);

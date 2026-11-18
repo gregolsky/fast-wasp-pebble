@@ -23,6 +23,7 @@ UNIT_SRCS := \
   tests/unit/test_stats.c \
   tests/unit/test_wakeup.c \
   tests/unit/test_alert_style.c \
+  tests/unit/test_restore.c \
   tests/unit/test_glance.c \
   tests/unit/test_actions.c \
   tests/unit/runner.c

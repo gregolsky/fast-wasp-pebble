@@ -65,8 +65,17 @@ def test_switch_back_to_timeline_reinserts_pins(pebble):
 
 def test_relaunch_does_not_duplicate_pins(pebble):
     _start_fast(pebble)
-    assert pebble.wait_for_log(f"pin-add:{FAST_COMPLETE}:", timeout=20)
+    assert pebble.wait_for_log("pins-confirmed", timeout=20)
+    time.sleep(1)  # let the first session's log lines drain
     pebble.clear_logs()
     pebble.reinstall()
-    assert pebble.wait_for_log("pins-sent", timeout=30)
+    assert pebble.wait_for_log("pins-confirmed", timeout=30)
     assert not pebble.wait_for_log("pin-add:", timeout=3), "pins re-inserted on relaunch"
+
+
+def test_exit_right_after_start_still_delivers_pins(pebble):
+    pebble.reinstall(settle_s=0)  # relaunch: the phone script is still starting
+    pebble.press("select")
+    pebble.press("back")
+    assert pebble.wait_for_log(f"pin-add:{FAST_COMPLETE}:", timeout=20), "pins lost on exit"
+    assert pebble.wait_for_log("pins-confirmed"), "app left before the phone stored the pins"

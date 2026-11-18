@@ -20,7 +20,7 @@
     "watchapp": {
       "watchface": false
     },
-    "messageKeys": ["READY", "PINS"],
+    "messageKeys": ["READY", "PINS", "SYNCED"],
     "resources": {
       "media": [
         { "type": "png", "name": "IMAGE_MENU_ICON",

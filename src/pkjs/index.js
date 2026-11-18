@@ -29,7 +29,7 @@ function readInt32LE(bytes, off) {
 function syncPins(bytes) {
   if (!bytes || bytes.length !== ALERTS.length * 4) {
     console.log('pins-bad-payload');
-    return;
+    return false;
   }
   var now = Date.now() / 1000;
   for (var i = 0; i < ALERTS.length; i++) {
@@ -56,20 +56,25 @@ function syncPins(bytes) {
       console.log('pin-add:' + i + ':' + at);
     }
   }
+  return true;
 }
 
-// The watch sends nothing until it hears READY, so keep trying.
-function sendReady(triesLeft) {
+// The watch may be busy (nack), so retry a few times.
+function send(key, value, triesLeft) {
   var msg = {};
-  msg[keys.READY] = 1;
+  msg[key] = value;
   Pebble.sendAppMessage(msg, null, function () {
-    if (triesLeft > 0) setTimeout(function () { sendReady(triesLeft - 1); }, 1000);
+    if (triesLeft > 0) setTimeout(function () { send(key, value, triesLeft - 1); }, 1000);
   });
 }
 
-Pebble.addEventListener('ready', function () { sendReady(5); });
+// The watch sends nothing until it hears READY.
+Pebble.addEventListener('ready', function () { send(keys.READY, 1, 5); });
 
 Pebble.addEventListener('appmessage', function (e) {
   var bytes = e.payload.PINS || e.payload[keys.PINS];
-  if (bytes !== undefined) syncPins(bytes);
+  if (bytes === undefined || !syncPins(bytes)) return;
+  // The phone acks before this handler runs, so echo the times once the pins
+  // are stored; only then may the watch app exit.
+  send(keys.SYNCED, bytes, 3);
 });

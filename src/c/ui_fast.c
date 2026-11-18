@@ -5,6 +5,8 @@
 #include "ui_picker.h"
 #include "ui_stats.h"
 #include "ui_settings.h"
+#include "ui_sync.h"
+#include "notify.h"
 #include "fasting.h"
 #include "storage.h"
 
@@ -245,8 +247,16 @@ static void click_down_short(ClickRecognizerRef r, void *ctx) {
     ui_settings_push();
 }
 
+// Leaving drops the phone's script, so first make sure it has the alert times.
+static void click_back(ClickRecognizerRef r, void *ctx) {
+    (void)r; (void)ctx;
+    if (notify_pins_in_sync()) window_stack_pop(true);
+    else ui_sync_push();
+}
+
 static void click_config(void *ctx) {
     (void)ctx;
+    window_single_click_subscribe(BUTTON_ID_BACK, click_back);
     window_single_click_subscribe(BUTTON_ID_SELECT, click_select_short);
     window_long_click_subscribe(BUTTON_ID_SELECT, 700, click_select_long, NULL);
     window_single_click_subscribe(BUTTON_ID_UP, click_up_short);

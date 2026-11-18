@@ -113,6 +113,13 @@ static void wakeup_remove(NotifyEvent event) {
     }
 }
 
+void notify_cancel_all_wakeups(void) {
+    wakeup_cancel_all();
+    for (int e = 0; e < NOTIFY_EVENT_COUNT; e++) {
+        storage_set_wakeup_id_for_event((uint8_t)e, -1);
+    }
+}
+
 bool notify_check_wakeup(NotifyEvent *event) {
     WakeupId id;
     int32_t  reason;
@@ -225,6 +232,14 @@ static void wakeup_add(NotifyEvent event, int32_t target_at) {
     storage_set_wakeup_id_for_event((uint8_t)event, 42); // sentinel
 }
 
+// Stands in for the watch: drops every wakeup, known or orphaned.
+void notify_cancel_all_wakeups(void) {
+    s_sched_count = 0;
+    for (int e = 0; e < NOTIFY_EVENT_COUNT; e++) {
+        storage_set_wakeup_id_for_event((uint8_t)e, -1);
+    }
+}
+
 bool notify_check_wakeup(NotifyEvent *event) { (void)event; return false; }
 void notify_handle(NotifyEvent event)        { (void)event; }
 void notify_subscribe_inapp(NotifyInAppCallback cb) { (void)cb; }
@@ -237,6 +252,7 @@ void notify_subscribe_inapp(NotifyInAppCallback cb) { (void)cb; }
 // pending alerts between wakeups and timeline pins.
 void notify_schedule(NotifyEvent event, int32_t target_at) {
     notify_cancel_event(event);
+    if (target_at <= time_now()) return;
     storage_set_alert_at((uint8_t)event, target_at);
     if (storage_get_full_screen_alerts()) {
         wakeup_add(event, target_at);
@@ -258,10 +274,28 @@ void notify_set_full_screen(bool on) {
     int32_t now = time_now();
     for (int e = 0; e < NOTIFY_EVENT_COUNT; e++) {
         int32_t at = storage_get_alert_at((uint8_t)e);
-        // No time stored: a wakeup scheduled before v1.14 kept times; leave it be.
-        if (!at) continue;
         wakeup_remove((NotifyEvent)e);
         if (on && at > now) wakeup_add((NotifyEvent)e, at);
     }
     pins_sync(); // sends zeros when full screen, withdrawing pending pins
+}
+
+void notify_pin_times(int32_t at[NOTIFY_EVENT_COUNT]) {
+    bool    pins_on = !storage_get_full_screen_alerts();
+    int32_t now     = time_now();
+    for (int e = 0; e < NOTIFY_EVENT_COUNT; e++) {
+        int32_t t = storage_get_alert_at((uint8_t)e);
+        at[e] = (pins_on && t > now) ? t : 0;
+    }
+}
+
+bool notify_pins_in_sync(void) {
+    int32_t at[NOTIFY_EVENT_COUNT];
+    notify_pin_times(at);
+    int32_t now = time_now();
+    for (int e = 0; e < NOTIFY_EVENT_COUNT; e++) {
+        int32_t sent = storage_get_pin_sent((uint8_t)e);
+        if (at[e] != (sent > now ? sent : 0)) return false; // a fired pin needs no withdrawing
+    }
+    return true;
 }

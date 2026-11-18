@@ -67,6 +67,14 @@ void storage_set_wakeup_id_for_event(uint8_t event, int32_t id) {
     persist_write_int(K_WAKEUP_ID_BASE + (uint32_t)event, id);
 }
 
+int32_t storage_get_pin_sent(uint8_t event) {
+    uint32_t key = K_PIN_SENT_BASE + (uint32_t)event;
+    return persist_exists(key) ? (int32_t)persist_read_int(key) : 0;
+}
+void storage_set_pin_sent(uint8_t event, int32_t at) {
+    persist_write_int(K_PIN_SENT_BASE + (uint32_t)event, at);
+}
+
 // ── Stats aggregate ───────────────────────────────────────────────────────────
 
 void storage_record_fast(int32_t duration_sec, int32_t overtime_sec) {

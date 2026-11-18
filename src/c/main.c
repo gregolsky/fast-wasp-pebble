@@ -37,6 +37,7 @@ static void app_init(void) {
     APP_LOG(APP_LOG_LEVEL_INFO, "app-version:" APP_VERSION);
     handle_wakeup_on_launch();
     pins_init();
+    fasting_restore_alerts();
 
     if (storage_get_program_id() == NO_PROGRAM) {
         APP_LOG(APP_LOG_LEVEL_INFO, "state-picker");

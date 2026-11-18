@@ -6,8 +6,15 @@
 - **Timeline alerts (new default)**: alerts arrive as native timeline reminders — the compact popup over the watchface, with the app name — and each one stays in the timeline as a pin. The phone creates the pins when you start or change a fast; once synced, they fire even with the phone away
 - **Settings → Alerts**: choose Timeline or Full screen. Switching moves alerts already scheduled for the current fast to the new style
 - Full-screen alerts now show "FastWasp" above the title
+- **Leaving the app waits for the phone**: if the phone hasn't stored the latest alert times yet, "Syncing alerts with phone…" shows until it has (usually a second). If the phone can't be reached in 10 s, a warning says to open FastWasp near the phone so old alerts get cleared
+
+### 🐛 Fixed
+- **Old alerts after a reinstall**: removing the app wiped its data but the watch kept its scheduled alerts, so a "Fast complete" from the previous fast could fire hours early. Every launch now clears all of the app's alerts and rebuilds them from the current fast
+- An alert whose time has already passed is never scheduled, so reopening the app after the goal doesn't repeat "Fast complete"
+- Upgrading mid-fast moves that fast's alerts to the chosen style instead of keeping the old full-screen ones
 
 ### 🔧 Tooling
+- E2E: reinstall test (uninstall mid-fast, reinstall, start a new fast, jump to the old fast's halfway: nothing fires; fails without the fix) and an exit-right-after-start test that checks the phone stored the pins
 - E2E: timeline pin tests (insert, withdraw, reminder, switching style both ways, no duplicate pins on relaunch); the emulator is wiped before boot rather than after, which had deleted the phone simulator's timeline database
 
 ---
