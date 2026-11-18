@@ -11,6 +11,7 @@
 #include "ui_picker.h"
 #include "fasting.h"
 #include "glance.h"
+#include "pins.h"
 
 static bool        s_launch_wakeup = false;
 static NotifyEvent s_launch_event;
@@ -35,6 +36,7 @@ static void on_first_program_selected(uint8_t idx) {
 static void app_init(void) {
     APP_LOG(APP_LOG_LEVEL_INFO, "app-version:" APP_VERSION);
     handle_wakeup_on_launch();
+    pins_init();
 
     if (storage_get_program_id() == NO_PROGRAM) {
         APP_LOG(APP_LOG_LEVEL_INFO, "state-picker");

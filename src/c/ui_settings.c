@@ -5,15 +5,17 @@
 #include "version.h"
 #include "storage.h"
 #include "fasting.h"
+#include "notify.h"
 
 #include <pebble.h>
 #include <stdio.h>
 
 #define ROW_VIBRATION  0
 #define ROW_MILESTONES 1
-#define ROW_RESET      2
-#define ROW_ABOUT      3
-#define NUM_ROWS       4
+#define ROW_ALERTS     2
+#define ROW_RESET      3
+#define ROW_ABOUT      4
+#define NUM_ROWS       5
 
 static Window    *s_window;
 static MenuLayer *s_menu;
@@ -39,6 +41,10 @@ static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *idx, voi
             menu_cell_basic_draw(ctx, cell_layer, "Milestones", sub, NULL);
             break;
         }
+        case ROW_ALERTS:
+            menu_cell_basic_draw(ctx, cell_layer, "Alerts",
+                                 storage_get_full_screen_alerts() ? "Full screen" : "Timeline", NULL);
+            break;
         case ROW_RESET:
             menu_cell_basic_draw(ctx, cell_layer,
                                  s_confirm_reset ? "Confirm Reset?" : "Reset Data",
@@ -60,6 +66,12 @@ static void on_select(MenuLayer *ml, MenuIndex *idx, void *ctx) {
             break;
         case ROW_MILESTONES:
             storage_set_milestones_on(!storage_get_milestones_on());
+            menu_layer_reload_data(s_menu);
+            break;
+        case ROW_ALERTS:
+            notify_set_full_screen(!storage_get_full_screen_alerts());
+            APP_LOG(APP_LOG_LEVEL_INFO, "alerts-style:%s",
+                    storage_get_full_screen_alerts() ? "full" : "timeline");
             menu_layer_reload_data(s_menu);
             break;
         case ROW_RESET:

@@ -15,12 +15,14 @@ UNIT_SRCS := \
   src/c/glance.c \
   tests/unit/shims/time_shim.c \
   tests/unit/shims/persist_shim.c \
+  tests/unit/shims/pins_shim.c \
   tests/unit/vendor/unity/unity.c \
   tests/unit/test_program.c \
   tests/unit/test_fasting.c \
   tests/unit/test_omad.c \
   tests/unit/test_stats.c \
   tests/unit/test_wakeup.c \
+  tests/unit/test_alert_style.c \
   tests/unit/test_glance.c \
   tests/unit/test_actions.c \
   tests/unit/runner.c

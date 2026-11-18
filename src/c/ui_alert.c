@@ -26,6 +26,7 @@ static const AlertCopy COPY[NOTIFY_EVENT_COUNT] = {
 // ── Window state ──────────────────────────────────────────────────────────────
 
 static Window    *s_window;
+static TextLayer *s_app_layer;
 static TextLayer *s_title_layer;
 static TextLayer *s_body_layer;
 static TextLayer *s_hint_layer;
@@ -90,6 +91,15 @@ static void window_load(Window *win) {
 
     int body_y = 44;
 #endif
+    // Alerts take the full screen, so name the app above the title.
+    s_app_layer = text_layer_create(GRect(inset, PBL_IF_ROUND_ELSE(10, 0), bounds.size.w - 2 * inset, 16));
+    text_layer_set_background_color(s_app_layer, GColorClear);
+    text_layer_set_text_color(s_app_layer, PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite));
+    text_layer_set_font(s_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+    text_layer_set_text_alignment(s_app_layer, align);
+    text_layer_set_text(s_app_layer, "FastWasp");
+    layer_add_child(root, text_layer_get_layer(s_app_layer));
+
     // Round: lift the hint out of the narrow bottom of the circle.
     int hint_y = bounds.size.h - PBL_IF_ROUND_ELSE(46, 20);
     // Icon size comes from the per-platform resource (see tools/gen_alert_icons.py).
@@ -126,6 +136,7 @@ static void window_load(Window *win) {
 
 static void window_unload(Window *win) {
     (void)win;
+    text_layer_destroy(s_app_layer);
     text_layer_destroy(s_title_layer);
     text_layer_destroy(s_body_layer);
     text_layer_destroy(s_hint_layer);

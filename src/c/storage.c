@@ -46,6 +46,19 @@ bool storage_get_milestones_on(void) {
 }
 void storage_set_milestones_on(bool v) { persist_write_int(K_MILESTONES_ON, (int32_t)v); }
 
+bool storage_get_full_screen_alerts(void) {
+    return persist_exists(K_FULL_SCREEN_ALERTS) ? (bool)persist_read_int(K_FULL_SCREEN_ALERTS) : false;
+}
+void storage_set_full_screen_alerts(bool v) { persist_write_int(K_FULL_SCREEN_ALERTS, (int32_t)v); }
+
+int32_t storage_get_alert_at(uint8_t event) {
+    uint32_t key = K_ALERT_AT_BASE + (uint32_t)event;
+    return persist_exists(key) ? (int32_t)persist_read_int(key) : 0;
+}
+void storage_set_alert_at(uint8_t event, int32_t at) {
+    persist_write_int(K_ALERT_AT_BASE + (uint32_t)event, at);
+}
+
 int32_t storage_get_wakeup_id_for_event(uint8_t event) {
     uint32_t key = K_WAKEUP_ID_BASE + (uint32_t)event;
     return persist_exists(key) ? (int32_t)persist_read_int(key) : -1;
@@ -93,6 +106,8 @@ void storage_reset_all(void) {
     persist_delete(K_MILESTONES_ON);
     persist_delete(9u); // K_WAKEUP_ID legacy key, keep deleting for clean migration
     for (uint32_t e = 0; e < 7; e++) persist_delete(K_WAKEUP_ID_BASE + e);
+    for (uint32_t e = 0; e < 7; e++) persist_delete(K_ALERT_AT_BASE + e);
+    persist_delete(K_FULL_SCREEN_ALERTS);
     persist_delete(K_STATS_COUNT);
     persist_delete(K_STATS_TOTAL_SEC);
     persist_delete(K_STATS_LONGEST_SEC);

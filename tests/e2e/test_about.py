@@ -4,6 +4,7 @@
 def test_about_row_selectable(pebble):
     pebble.press("down")      # open Settings (lands on Vibration)
     pebble.press("down")      # -> Milestones
+    pebble.press("down")      # -> Alerts
     pebble.press("down")      # -> Reset Data
     pebble.press("down")      # -> About
     pebble.press("select")    # select About

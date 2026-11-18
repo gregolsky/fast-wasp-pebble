@@ -13,9 +13,9 @@ A glanceable, native intermittent-fasting tracker for the new Pebble devices fro
 - ⏳ **6 fasting programs** — 12:12, 14:10, 16:8, 18:6, 20:4, and OMAD
 - 🍽️ **Tracks fast + eating window + OMAD** intervals
 - 🔥 **OVERTIME counter** — keeps counting up past your target until you explicitly stop
-- 📳 **Wrist alerts** — wakeups + vibration when your target is reached, even if the app is closed
+- 📳 **Wrist alerts** — goal and milestone alerts as native timeline reminders (default), or full-screen alerts that open the app; both fire even if the app is closed
 - 📊 **Stats screen** — total fasts, average length, longest fast, total overtime (press Up)
-- ⚙️ **Settings** — vibration toggle, reset data
+- ⚙️ **Settings** — vibration, milestones, alert style (Timeline / Full screen), reset data
 - 🔒 **100% offline** — all data stored locally in watch persistent storage
 
 ## 📸 Screenshots

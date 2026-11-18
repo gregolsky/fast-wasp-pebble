@@ -21,6 +21,9 @@
 // Per-event wakeup IDs: keys K_WAKEUP_ID_BASE+0 .. K_WAKEUP_ID_BASE+6 (events 0..6)
 #define K_WAKEUP_ID_BASE     14u
 #define K_MILESTONES_ON      21u
+// Per-event alert times (0 = none): keys K_ALERT_AT_BASE+0 .. +6
+#define K_ALERT_AT_BASE      22u
+#define K_FULL_SCREEN_ALERTS 29u
 
 // ── Getters / setters ─────────────────────────────────────────────────────────
 
@@ -47,6 +50,14 @@ void     storage_set_vibration_on(bool v);
 
 bool     storage_get_milestones_on(void);
 void     storage_set_milestones_on(bool v);
+
+// Alert style: false = timeline pins (default), true = full-screen wakeup alerts.
+bool     storage_get_full_screen_alerts(void);
+void     storage_set_full_screen_alerts(bool v);
+
+// Per-event alert time, whatever the style (managed by notify.c).
+int32_t  storage_get_alert_at(uint8_t event);
+void     storage_set_alert_at(uint8_t event, int32_t at);
 
 // Per-event wakeup ID slots (managed by notify.c).
 int32_t  storage_get_wakeup_id_for_event(uint8_t event);

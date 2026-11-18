@@ -20,6 +20,7 @@ def test_every_alert_screen(pebble_raw):
     pebble = pebble_raw
     pebble.select_program(PROGRAM_18_6)
     assert pebble.wait_for_log("state-ready")
+    pebble.use_full_screen_alerts()
     start = pebble.emu_now()
     pebble.press("select")
     assert pebble.wait_for_log("fast-active")

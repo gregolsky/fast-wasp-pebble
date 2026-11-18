@@ -10,6 +10,7 @@ extern int32_t g_now;
 
 static void actions_setup(uint8_t prog) {
     notify_stub_reset();
+    storage_set_full_screen_alerts(true); // the stub records wakeups
     if (prog != NO_PROGRAM) storage_set_program_id(prog);
 }
 

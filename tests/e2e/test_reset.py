@@ -17,8 +17,9 @@ def test_reset_clears_state(pebble):
 
     _open_settings(pebble)
 
-    # Navigate to "Reset Data" (third item: Vibration, Milestones, Reset Data).
+    # Navigate to "Reset Data" (Vibration, Milestones, Alerts, Reset Data).
     pebble.press("down")     # -> Milestones
+    pebble.press("down")     # -> Alerts
     pebble.press("down")     # -> Reset Data
     pebble.press("select")   # arm confirm
     time.sleep(0.3)

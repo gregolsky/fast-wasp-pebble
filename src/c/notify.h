@@ -20,14 +20,18 @@ typedef enum {
 #define COLLISION_THRESHOLD_S 60
 #define COLLISION_SHIFT_S    (30 * 60)
 
-// Schedule a wakeup for the given event. Cancels any previously scheduled
-// wakeup for the same event type.
+// Schedule the alert for the given event, as a timeline pin or a full-screen
+// wakeup depending on the style setting. Replaces any earlier one for the event.
 void notify_schedule(NotifyEvent event, int32_t target_at);
 
-// Cancel the wakeup for the given event (if any).
+// Cancel the alert for the given event (if any), in either style.
 void notify_cancel_event(NotifyEvent event);
 
-// Cancel all fasting-related wakeups (call on stop/reset).
+// Switch alert style (Settings): moves pending alerts between full-screen
+// wakeups and timeline pins.
+void notify_set_full_screen(bool on);
+
+// Cancel all fasting-related alerts (call on stop/reset).
 void notify_cancel_all_fasting(void);
 
 // Schedule FAST_COMPLETE + all applicable fast milestones based on start time

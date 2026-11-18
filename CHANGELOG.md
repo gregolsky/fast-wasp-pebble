@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.14.0] — 2026-11-18
+
+### ✨ Added
+- **Timeline alerts (new default)**: alerts arrive as native timeline reminders — the compact popup over the watchface, with the app name — and each one stays in the timeline as a pin. The phone creates the pins when you start or change a fast; once synced, they fire even with the phone away
+- **Settings → Alerts**: choose Timeline or Full screen. Switching moves alerts already scheduled for the current fast to the new style
+- Full-screen alerts now show "FastWasp" above the title
+
+### 🔧 Tooling
+- E2E: timeline pin tests (insert, withdraw, reminder, switching style both ways, no duplicate pins on relaunch); the emulator is wiped before boot rather than after, which had deleted the phone simulator's timeline database
+
+---
+
 ## [1.13.0] — 2026-11-17
 
 ### ✨ Added

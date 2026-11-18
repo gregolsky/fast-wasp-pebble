@@ -50,6 +50,9 @@ class PebbleEmulator:
 
     def start(self):
         self._clear_emulator_state()
+        # Wipe before boot: wiping a running emulator deletes the phone
+        # simulator's timeline database out from under it.
+        subprocess.run(["pebble", "wipe"], capture_output=True)
         pbw = _find_pbw()
         for attempt in range(6):
             try:
@@ -69,7 +72,6 @@ class PebbleEmulator:
             time.sleep(3)
         else:
             raise RuntimeError("pebble install failed after 6 attempts")
-        subprocess.run(["pebble", "wipe"], capture_output=True)
         time.sleep(3)
         self._start_logs()
 
@@ -107,6 +109,22 @@ class PebbleEmulator:
         self.press("select")
 
     # ── Clock ─────────────────────────────────────────────────────────────────
+
+    def _toggle_alert_style(self, expected):
+        self.press("down")    # Settings, on Vibration
+        self.press("down")    # Milestones
+        self.press("down")    # Alerts
+        self.press("select")
+        assert self.wait_for_log(f"alerts-style:{expected}"), "alert style not switched"
+        self.press("back")
+
+    def use_full_screen_alerts(self):
+        """Settings > Alerts: from the default (timeline pins) to full screen."""
+        self._toggle_alert_style("full")
+
+    def use_timeline_alerts(self):
+        """Settings > Alerts: from full screen back to timeline pins."""
+        self._toggle_alert_style("timeline")
 
     def set_time(self, unix_s):
         """Jump the emulated watch clock to unix_s (UTC seconds)."""

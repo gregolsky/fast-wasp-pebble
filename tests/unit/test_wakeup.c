@@ -15,6 +15,7 @@ static void wakeup_setup(void) {
     persist_reset_all();
     g_now = T0;
     notify_stub_reset();
+    storage_set_full_screen_alerts(true); // the stub records wakeups
 }
 
 // ── Basic schedule / cancel ───────────────────────────────────────────────────

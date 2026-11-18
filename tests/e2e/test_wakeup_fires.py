@@ -1,4 +1,4 @@
-"""Wakeups fire for real: jump the emulator clock to just before each
+"""Full-screen alert style. Wakeups fire for real: jump the emulator clock to just before each
 scheduled alert and wait for the alert screen to log `alert:<NotifyEvent>`."""
 
 import time
@@ -13,6 +13,7 @@ FAST_COMPLETE, OMAD_TARGET, FAST_HALFWAY = 0, 2, 3
 
 
 def _start_fast(pebble):
+    pebble.use_full_screen_alerts()
     start = time.time()  # emulator clock starts at host time
     pebble.press("select")
     assert pebble.wait_for_log("fast-active")
@@ -54,6 +55,7 @@ def test_milestones_off_skips_halfway(pebble):
 
 
 def test_omad_first_meal_target_fires(pebble):
+    pebble.use_full_screen_alerts()
     _switch_to_omad(pebble)
     meal = time.time()
     pebble.press("select")  # first meal

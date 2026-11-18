@@ -69,6 +69,17 @@ void test_stats_accumulates(void);
 void test_stats_longest_tracked(void);
 void test_stats_reset_clears(void);
 
+// test_alert_style.c
+void test_timeline_is_default_style(void);
+void test_timeline_schedule_syncs_pins_not_wakeups(void);
+void test_timeline_cancel_clears_alert_and_syncs(void);
+void test_cancel_unscheduled_does_not_sync(void);
+void test_full_screen_schedule_uses_wakeup(void);
+void test_switch_to_full_screen_moves_only_future_alerts(void);
+void test_switch_back_to_timeline_cancels_wakeups_keeps_times(void);
+void test_reset_all_restores_timeline_style(void);
+void test_switch_style_keeps_wakeups_from_before_upgrade(void);
+
 // test_wakeup.c
 void test_wakeup_target_for_16h_fast(void);
 void test_cancel_event_clears_storage(void);
@@ -158,6 +169,15 @@ int main(void) {
     RUN_TEST(test_stats_longest_tracked);
     RUN_TEST(test_stats_reset_clears);
 
+    RUN_TEST(test_timeline_is_default_style);
+    RUN_TEST(test_timeline_schedule_syncs_pins_not_wakeups);
+    RUN_TEST(test_timeline_cancel_clears_alert_and_syncs);
+    RUN_TEST(test_cancel_unscheduled_does_not_sync);
+    RUN_TEST(test_full_screen_schedule_uses_wakeup);
+    RUN_TEST(test_switch_to_full_screen_moves_only_future_alerts);
+    RUN_TEST(test_switch_back_to_timeline_cancels_wakeups_keeps_times);
+    RUN_TEST(test_reset_all_restores_timeline_style);
+    RUN_TEST(test_switch_style_keeps_wakeups_from_before_upgrade);
     RUN_TEST(test_wakeup_target_for_16h_fast);
     RUN_TEST(test_cancel_event_clears_storage);
     RUN_TEST(test_schedule_same_event_cancels_previous);
