@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ui_picker.h"
+#include "idle.h"
 #include "fasting.h"
 #include "ui_settings.h"
 
@@ -45,16 +46,19 @@ static void on_select_click(MenuLayer *ml, MenuIndex *idx, void *ctx) {
 
 static void click_up(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
+    idle_kick();
     menu_layer_set_selected_next(s_menu, true, MenuRowAlignCenter, true);
 }
 
 static void click_down(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
+    idle_kick();
     menu_layer_set_selected_next(s_menu, false, MenuRowAlignCenter, true);
 }
 
 static void click_select(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
+    idle_kick();
     MenuIndex idx = menu_layer_get_selected_index(s_menu);
     on_select_click(s_menu, &idx, NULL);
 }
@@ -92,6 +96,7 @@ void ui_picker_push(void (*on_select)(uint8_t program_idx)) {
     s_window = window_create();
     window_set_window_handlers(s_window, (WindowHandlers){
         .load   = window_load,
+        .appear = idle_window_kick,
         .unload = window_unload,
     });
     window_stack_push(s_window, true);

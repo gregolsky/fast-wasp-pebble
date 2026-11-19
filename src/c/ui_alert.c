@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ui_alert.h"
+#include "idle.h"
 
 #include <pebble.h>
 #include <stdio.h>
@@ -46,6 +47,7 @@ static void header_draw(Layer *layer, GContext *ctx) {
 
 static void click_dismiss(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
+    idle_kick();
     window_stack_remove(s_window, true);
 }
 
@@ -161,6 +163,7 @@ void ui_alert_push(NotifyEvent event) {
     s_window = window_create();
     window_set_window_handlers(s_window, (WindowHandlers){
         .load   = window_load,
+        .appear = idle_window_kick,
         .unload = window_unload,
     });
     window_stack_push(s_window, true);

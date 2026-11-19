@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ui_settings.h"
+#include "idle.h"
 #include "version.h"
 #include "storage.h"
 #include "fasting.h"
@@ -59,6 +60,7 @@ static void draw_row(GContext *ctx, const Layer *cell_layer, MenuIndex *idx, voi
 
 static void on_select(MenuLayer *ml, MenuIndex *idx, void *ctx) {
     (void)ml; (void)ctx;
+    idle_kick();
     switch (idx->row) {
         case ROW_VIBRATION:
             storage_set_vibration_on(!storage_get_vibration_on());
@@ -99,6 +101,7 @@ static void window_load(Window *win) {
         .get_num_rows = get_num_rows,
         .draw_row     = draw_row,
         .select_click = on_select,
+        .selection_changed = idle_menu_kick,
     });
     menu_layer_set_click_config_onto_window(s_menu, win);
     layer_add_child(root, menu_layer_get_layer(s_menu));
@@ -116,6 +119,7 @@ void ui_settings_push(void) {
     s_window = window_create();
     window_set_window_handlers(s_window, (WindowHandlers){
         .load   = window_load,
+        .appear = idle_window_kick,
         .unload = window_unload,
     });
     window_stack_push(s_window, true);

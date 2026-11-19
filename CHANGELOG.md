@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.16.0] — 2026-11-19
+
+- Back to the watchface after 30 s without a button press
+
+---
+
 ## [1.15.0] — 2026-11-18
 
 - Reminder pin enhancements

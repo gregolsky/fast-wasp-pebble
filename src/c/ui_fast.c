@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ui_fast.h"
+#include "idle.h"
 #include "ui_picker.h"
 #include "ui_stats.h"
 #include "ui_settings.h"
@@ -223,6 +224,7 @@ static void on_select_program(uint8_t idx) {
 
 static void click_select_short(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
+    idle_kick();
     if (fasting_select()) {
         // A new fast or eating window starts; let its overtime log fire again.
         s_fast_complete_fired = false;
@@ -234,16 +236,19 @@ static void click_select_short(ClickRecognizerRef r, void *ctx) {
 
 static void click_select_long(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
+    idle_kick();
     ui_picker_push(on_select_program);
 }
 
 static void click_up_short(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
+    idle_kick();
     ui_stats_push();
 }
 
 static void click_down_short(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
+    idle_kick();
     ui_settings_push();
 }
 
@@ -274,6 +279,7 @@ static void on_exit_synced(void) {
 
 static void click_back(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
+    idle_kick();
     if (s_exit_timer) return; // already leaving
     if (notify_pins_in_sync() || !connection_service_peek_pebble_app_connection()) {
         window_stack_pop(true);
@@ -384,6 +390,7 @@ void ui_fast_push(void) {
     s_window = window_create();
     window_set_window_handlers(s_window, (WindowHandlers){
         .load   = window_load,
+        .appear = idle_window_kick,
         .unload = window_unload,
     });
     window_stack_push(s_window, true);

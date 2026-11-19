@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "ui_stats.h"
+#include "idle.h"
 #include "fasting.h"
 #include "storage.h"
 
@@ -59,6 +60,7 @@ static void confirm_draw_row(GContext *gctx, const Layer *cell_layer, MenuIndex 
 
 static void confirm_on_select(MenuLayer *ml, MenuIndex *idx, void *ctx) {
     (void)ml; (void)ctx;
+    idle_kick();
     if (idx->row == CONFIRM_ROW_RESET) {
         storage_reset_stats();
         APP_LOG(APP_LOG_LEVEL_INFO, "stats-reset");
@@ -77,6 +79,7 @@ static void confirm_window_load(Window *win) {
         .get_num_rows = confirm_get_num_rows,
         .draw_row     = confirm_draw_row,
         .select_click = confirm_on_select,
+        .selection_changed = idle_menu_kick,
     });
     menu_layer_set_click_config_onto_window(s_confirm_menu, win);
     layer_add_child(root, menu_layer_get_layer(s_confirm_menu));
@@ -94,6 +97,7 @@ static void push_confirm_window(void) {
     s_confirm_window = window_create();
     window_set_window_handlers(s_confirm_window, (WindowHandlers){
         .load   = confirm_window_load,
+        .appear = idle_window_kick,
         .unload = confirm_window_unload,
     });
     window_stack_push(s_confirm_window, true);
@@ -103,6 +107,7 @@ static void push_confirm_window(void) {
 
 static void click_select(ClickRecognizerRef r, void *ctx) {
     (void)r; (void)ctx;
+    idle_kick();
     push_confirm_window();
 }
 
@@ -154,6 +159,7 @@ void ui_stats_push(void) {
     s_window = window_create();
     window_set_window_handlers(s_window, (WindowHandlers){
         .load   = window_load,
+        .appear = idle_window_kick,
         .unload = window_unload,
     });
     window_stack_push(s_window, true);
